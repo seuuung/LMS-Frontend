@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LMS 교수자 대시보드</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .sidebar {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            box-shadow: var(--shadow-md);
+            align-self: start;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: var(--text-main);
+            border-radius: var(--radius-md);
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        .header-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .class-card {
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1rem;
+        }
+
+        .class-card h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .grid-forms {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .list-container {
+            margin-top: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .list-item {
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.5rem 0;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container dashboard-grid">
+        <aside class="sidebar">
+            <h3 style="padding: 0 1rem; margin-bottom: 1rem;">Prof Menu</h3>
+            <div class="nav-item active" data-target="myClasses">내 클래스 관리</div>
+        </aside>
+
+        <main class="content">
+            <!-- 내 클래스 관리 섹션 -->
+            <section id="myClassesSec" class="card">
+                <div id="myClassesListWrapper">
+                    <div class="header-action">
+                        <h2>내 클래스 목록</h2>
+                        <button class="btn btn-primary" id="btnCreateClass">새 클래스 만들기</button>
+                    </div>
+                    <div id="classFormContainer"
+                        style="display:none; background:#f1f5f9; padding: 1rem; border-radius:8px; margin-bottom:1rem;">
+                        <input type="text" id="newClassTitle" class="form-control mb-4" placeholder="클래스 제목">
+                        <textarea id="newClassDesc" class="form-control mb-4" placeholder="클래스 설명" rows="3"></textarea>
+                        <button class="btn btn-primary" id="submitCreateClass">생성</button>
+                    </div>
+                    <div id="myClassList" class="class-grid mt-4"></div>
+                </div>
+
+                <!-- 개별 클래스 대시보드 Wrapper -->
+                <div id="courseDashboardWrapper" style="display:none;">
+                    <div style="display:flex; align-items:center; margin-bottom:1.5rem; gap:1rem;">
+                        <button class="btn btn-back" id="btnBackToMyClasses">&larr; 뒤로가기</button>
+                        <h2 id="dashboardCourseTitle" style="margin:0;">클래스 대시보드</h2>
+                    </div>
+
+                    <!-- 대시보드 탭 -->
+                    <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+                        <button class="btn btn-tab active" id="tabLecRes">강의 및 자료 관리</button>
+                        <button class="btn btn-tab" id="tabQna">수강생 및 QnA 관리</button>
+                    </div>
+
+                    <!-- 강의 및 자료 관리 영역 -->
+                    <div id="lecResArea">
+                        <div class="grid-forms">
+                            <!-- 강의 업로드/목록 영역 -->
+                            <div>
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <h4>강의 (YouTube) 목록</h4>
+                                    <button class="btn btn-primary" id="btnToggleLecForm"
+                                        style="padding:0.4rem 1rem; font-size:0.9rem;">강의 업로드</button>
+                                </div>
+                                <div id="lecForm"
+                                    style="display:none; margin-top:1rem; background:#f1f5f9; padding:1rem; border-radius:8px;">
+                                    <input id="lecTitle" class="form-control mb-4" placeholder="강의 제목">
+                                    <input id="lecDesc" class="form-control mb-4" placeholder="강의 설명">
+                                    <input id="lecLink" class="form-control mb-4" placeholder="유튜브 링크">
+                                    <button id="btnCreateLec" class="btn btn-primary">등록</button>
+                                </div>
+
+                                <div class="list-container" id="lectureList"></div>
+                            </div>
+
+                            <!-- 자료 업로드/목록 영역 -->
+                            <div>
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <h4>자료실 목록</h4>
+                                    <button class="btn btn-primary" id="btnToggleResForm"
+                                        style="padding:0.4rem 1rem; font-size:0.9rem;">자료 업로드</button>
+                                </div>
+                                <div id="resForm"
+                                    style="display:none; margin-top:1rem; background:#f1f5f9; padding:1rem; border-radius:8px;">
+                                    <input id="resTitle" class="form-control mb-4" placeholder="자료 제목">
+                                    <input id="resDesc" class="form-control mb-4" placeholder="자료 설명">
+                                    <input id="resFile" type="file" class="form-control mb-4">
+                                    <button id="btnCreateRes" class="btn btn-primary">등록</button>
+                                </div>
+
+                                <div class="list-container" id="resourceList"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 수강생 및 QnA 관리 영역 -->
+                    <div id="qnaStuArea" style="display:none;">
+                        <h4>QnA 게시글</h4>
+                        <div class="list-container" id="qnaList"></div>
+                        <h4 class="mt-4">수강생 현황</h4>
+                        <div class="list-container" id="enrollmentList"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="js/professor.js"></script>
+</body>
+
+</html>
