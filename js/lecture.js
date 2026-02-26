@@ -129,6 +129,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         statusBadge.textContent = '';
         statusBadge.className = badgeEl.className;
         statusBadge.textContent = badgeEl.textContent;
+    } else {
+        // 교수자 / 관리자: 수강 인원 통계
+        try {
+            const [enrollments, allViews] = await Promise.all([
+                api.enrollments.getByClass(classId),
+                api.lectureViews.getByClass(classId)
+            ]);
+
+            const totalStudents = enrollments.length;
+            const completedCount = allViews.filter(v =>
+                String(v.lectureId) === String(lectureId) && v.progressRate >= 95
+            ).length;
+
+            statusBadge.style.whiteSpace = 'nowrap';
+            statusBadge.className = 'badge-complete'; // 파란색 계열 배경
+            statusBadge.textContent = `수강 완료 ${completedCount}명 / 전체 ${totalStudents}명`;
+        } catch (e) {
+            statusBadge.textContent = '통계 로딩 실패';
+        }
     }
 
     // 학생 건너뛰기 방지: 허용 위치를 초과하면 강제 복귀
