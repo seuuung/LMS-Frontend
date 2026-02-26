@@ -1,11 +1,11 @@
 import { api } from './api.js';
-import { requireAuth, renderNavbar, showToast } from './common.js';
+import { requireAuth, renderNavbar, showToast, escapeHtml, handleApiError } from './common.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     requireAuth(['admin']); // 관리자만 접근 가능
     renderNavbar();
 
-    // 탭 전환 로직
+    // 사이드바 탭 전환 로직 (admin은 사이드바 패턴 사용)
     const navItems = document.querySelectorAll('.nav-item');
     const sections = {
         users: document.getElementById('usersSec'),
@@ -35,58 +35,71 @@ document.addEventListener('DOMContentLoaded', async () => {
             const tbody = document.getElementById('userList');
             tbody.innerHTML = users.map(u => `
                 <tr>
-                    <td>${u.username}</td>
-                    <td>${u.name}</td>
+                    <td>${escapeHtml(u.username)}</td>
+                    <td>${escapeHtml(u.name)}</td>
                     <td>
-                        <select onchange="window.updateRole('${u.id}', this.value)">
+                        <select data-action="update-role" data-id="${u.id}">
                             <option value="student" ${u.role === 'student' ? 'selected' : ''}>학습자</option>
                             <option value="prof" ${u.role === 'prof' ? 'selected' : ''}>교수자</option>
                             <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>관리자</option>
                         </select>
                     </td>
                     <td>
-                        <button class="action-btn del" onclick="window.deleteUser('${u.id}')">삭제</button>
+                        <button class="action-btn del" data-action="delete-user" data-id="${u.id}">삭제</button>
                     </td>
                 </tr>
             `).join('');
+
+            // 이벤트 위임: 역할 변경
+            tbody.onchange = async (e) => {
+                const select = e.target.closest('[data-action="update-role"]');
+                if (!select) return;
+                try {
+                    await api.users.updateRole(select.dataset.id, select.value);
+                    showToast('권한이 변경되었습니다.', 'success');
+                } catch (err) {
+                    handleApiError(err);
+                }
+            };
+
+            // 이벤트 위임: 유저 삭제
+            tbody.onclick = async (e) => {
+                const btn = e.target.closest('[data-action="delete-user"]');
+                if (!btn) return;
+                if (!confirm('정말 삭제하시겠습니까?')) return;
+                try {
+                    await api.users.delete(btn.dataset.id);
+                    showToast('삭제되었습니다.', 'success');
+                    loadData('users');
+                } catch (err) {
+                    handleApiError(err);
+                }
+            };
         } else if (type === 'classes') {
             const classes = await api.classes.getAll();
             const tbody = document.getElementById('classList');
             tbody.innerHTML = classes.map(c => `
                 <tr>
-                    <td>${c.title}</td>
-                    <td>${c.profId}</td>
+                    <td>${escapeHtml(c.title)}</td>
+                    <td>${escapeHtml(c.profId)}</td>
                     <td>${new Date(c.createdAt).toLocaleDateString()}</td>
-                    <td><button class="action-btn del" onclick="window.deleteClass('${c.id}')">삭제</button></td>
+                    <td><button class="action-btn del" data-action="delete-class" data-id="${c.id}">삭제</button></td>
                 </tr>
             `).join('');
+
+            // 이벤트 위임: 클래스 삭제
+            tbody.onclick = async (e) => {
+                const btn = e.target.closest('[data-action="delete-class"]');
+                if (!btn) return;
+                if (!confirm('클래스를 삭제할까요? 하위 데이터도 모두 삭제됩니다.')) return;
+                try {
+                    await api.classes.delete(btn.dataset.id);
+                    showToast('삭제되었습니다.', 'success');
+                    loadData('classes');
+                } catch (err) {
+                    handleApiError(err);
+                }
+            };
         }
     }
-
-    // 글로벌 함수 등록 (인라인 onclick용)
-    window.updateRole = async (id, role) => {
-        try {
-            await api.users.updateRole(id, role);
-            showToast('권한이 변경되었습니다.', 'success');
-        } catch (e) { showToast(e.message, 'error'); }
-    };
-
-    window.deleteUser = async (id) => {
-        if (!confirm('정말 삭제하시겠습니까?')) return;
-        try {
-            await api.users.delete(id);
-            showToast('삭제되었습니다.', 'success');
-            loadData('users');
-        } catch (e) { showToast(e.message, 'error'); }
-    };
-
-    window.deleteClass = async (id) => {
-        if (!confirm('클래스를 삭제할까요? 하위 데이터도 모두 삭제됩니다.')) return;
-        try {
-            await api.classes.delete(id);
-            showToast('삭제되었습니다.', 'success');
-            loadData('classes');
-        } catch (e) { showToast(e.message, 'error'); }
-    };
-
 });

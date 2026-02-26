@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LMS 학습자 대시보드</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <main class="main-content">
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <h3 style="padding: 0 1rem; margin-bottom: 1rem;">Student Menu</h3>
+                <div class="nav-item active" data-target="exploreClasses">클래스 탐색</div>
+                <div class="nav-item" data-target="myClasses">내 학습 공간</div>
+            </aside>
+
+            <main class="content">
+                <!-- 클래스 탐색 섹션 -->
+                <section id="exploreClassesSec" class="card">
+                    <h2>새로운 클래스 탐색</h2>
+                    <div id="allClassesList" class="class-grid mt-4"></div>
+                </section>
+
+                <!-- 내 학습 공간 섹션 -->
+                <section id="myClassesSec" class="card" style="display:none;">
+                    <h2>내 학습 공간</h2>
+                    <div id="myClassesList" class="class-grid mt-4"></div>
+                </section>
+            </main>
+        </div>
+    </main>
+
+    <script type="module">
+        import { renderFooter } from '../js/common.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFooter();
+        });
+    </script>
+    <script type="module" src="../js/student.js"></script>
+</body>
+
+</html>

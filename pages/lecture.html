@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>강의 시청 - LMS</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {
+            background: var(--bg-color);
+        }
+
+        .lecture-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card-bg);
+            padding: 1rem 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 32px;
+            box-sizing: border-box;
+            align-items: start;
+        }
+
+        .video-wrapper {
+            background: #000;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .video-wrapper iframe {
+            width: 100%;
+            height: 500px;
+            /* 큰 화면용 높이 최적화 (기존 600px -> 500px) */
+            border: none;
+            display: block;
+        }
+
+        .lecture-info {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            margin-top: 2rem;
+        }
+
+        .lecture-info h1 {
+            margin-top: 0;
+            color: var(--text-main);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            position: sticky;
+            top: 2rem;
+        }
+
+        /* 수강 상태 카드 디자인용 클래스 */
+        .status-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .resource-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .resource-card h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .resource-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+        }
+
+        .resource-list li {
+            background: var(--bg-color);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .resource-list li>div {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .resource-list a {
+            color: var(--primary-color);
+            font-weight: 600;
+            text-decoration: none;
+            padding: 0.4rem 0.8rem;
+            background: #e0f2fe;
+            border-radius: var(--radius-md);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .resource-list a:hover {
+            background: #bae6fd;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+            }
+
+            .video-wrapper iframe {
+                height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .video-wrapper iframe {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="lecture-header">
+        <h2 style="margin:0;"><a href="#" id="btnBack" class="btn btn-back">&larr; 돌아가기</a></h2>
+        <div id="userInfo"></div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <!-- 메인 강의 영역 -->
+            <section class="main-lecture">
+                <div class="video-wrapper">
+                    <div id="vidPlayer"></div>
+                </div>
+
+                <div class="lecture-info">
+                    <!-- 보기 모드 -->
+                    <div id="lectureViewMode">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h1 id="lecTitle" style="margin:0;">강의 제목 로딩 중...</h1>
+                            <button id="btnEditLecture" class="btn btn-primary"
+                                style="display:none; padding:0.4rem 1rem; font-size:0.9rem;">수정</button>
+                        </div>
+                        <p id="lecDesc"
+                            style="color:var(--text-muted); line-height:1.6; word-break:keep-all; overflow-wrap:break-word; margin-top:1rem;">
+                            설명 로딩 중...</p>
+                    </div>
+
+                    <!-- 편집 모드 (기본 숨김) -->
+                    <div id="lectureEditMode" style="display:none;">
+                        <h2 style="margin-bottom:1.5rem;">강의 수정</h2>
+                        <div class="form-group">
+                            <label class="form-label">강의 제목</label>
+                            <input type="text" id="editLecTitle" class="form-control" placeholder="강의 제목">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">강의 설명</label>
+                            <textarea id="editLecDesc" class="form-control" rows="4" placeholder="강의 설명"
+                                style="resize:vertical;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">유튜브 영상 링크</label>
+                            <input type="text" id="editLecLink" class="form-control"
+                                placeholder="https://www.youtube.com/watch?v=...">
+                        </div>
+
+                        <div style="display:flex; gap:0.75rem; justify-content:flex-end; margin-top:1.5rem;">
+                            <button id="btnCancelEdit" class="btn btn-back">취소</button>
+                            <button id="btnSaveEdit" class="btn btn-primary">저장</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 사이드바 자료 영역 -->
+            <aside class="sidebar">
+                <!-- 수강 진행 상태 위젯 (사이드바 최상단) -->
+                <div class="status-card">
+                    <h3 style="margin:0; font-size:1rem;">학습 현황</h3>
+                    <div style="display:inline-block; padding:0.4rem 0.8rem; background:#f1f5f9; border-radius:30px; font-size:0.85rem; font-weight:600;"
+                        id="statusBadge">로딩 중</div>
+                </div>
+
+                <!-- 첨부 자료 목록 -->
+                <div class="resource-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <h3 style="margin:0;">첨부 자료</h3>
+                    </div>
+                    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">이 강의가 속한 클래스의
+                        전체 자료입니다.</p>
+                    <ul class="resource-list" id="resList">
+                        <!-- 리소스 목록 동적 주입 -->
+                    </ul>
+                    <!-- 교수자용 파일 추가 (JS에서 표시 제어) -->
+                    <div id="addResArea"
+                        style="display:none; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border-color);">
+                        <input type="file" id="sidebarResFile" class="form-control"
+                            style="padding:0.5rem; font-size:0.85rem;">
+                        <button id="btnAddRes" class="btn btn-primary"
+                            style="width:100%; margin-top:0.5rem; padding:0.5rem; font-size:0.85rem;">자료 추가</button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <script type="module">
+        import { renderFooter, renderNavbar } from '../js/common.js';
+
+        // 페이지 로드 시 Footer 렌더링
+        document.addEventListener('DOMContentLoaded', () => {
+            // lecture.html 특성 상 자체적인 header(뒤로가기용)가 있지만 
+            // 전역 Navbar를 쓰고 싶다면 상단의 기존 header는 별도의 breadcrumb으로 처리하고 여기서 renderNavbar()를 호출할 수 있습니다.
+            // 요청사항에 맞게 일단 하단 Footer만 렌더링합니다.
+            renderFooter();
+        });
+    </script>
+    <script type="module" src="../js/lecture.js"></script>
+</body>
+
+</html>

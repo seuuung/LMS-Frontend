@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function redirectByRole(role) {
-    if (role === 'admin') window.location.href = 'admin.html';
-    else if (role === 'prof') window.location.href = 'professor.html';
-    else if (role === 'student') window.location.href = 'student.html';
+    if (role === 'admin') window.location.href = 'pages/admin.html';
+    else if (role === 'prof') window.location.href = 'pages/professor.html';
+    else if (role === 'student') window.location.href = 'pages/student.html';
 }

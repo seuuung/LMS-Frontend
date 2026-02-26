@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,20 +12,19 @@
     <link rel="stylesheet" href="css/style.css">
     <style>
         body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
             background: linear-gradient(135deg, #f6f8fd 0%, #f1f5f9 100%);
         }
+
         .auth-container {
             width: 100%;
             max-width: 400px;
         }
+
         .auth-card {
             padding: 3rem 2.5rem;
             animation: fadeIn 0.5s ease-out forwards;
         }
+
         .brand-title {
             text-align: center;
             font-size: 1.75rem;
@@ -32,10 +32,19 @@
             margin-bottom: 2rem;
             letter-spacing: -0.5px;
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         .form-select {
             width: 100%;
             padding: 0.75rem 1rem;
@@ -46,67 +55,81 @@
             color: var(--text-main);
             outline: none;
         }
+
         .form-select:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
     </style>
 </head>
+
 <body>
+    <main class="main-content" style="align-items:center; justify-content:center; padding: 2rem 0;">
+        <div class="auth-container">
+            <!-- 로그인 폼 -->
+            <div id="formViewLogin" class="card auth-card">
+                <h1 class="brand-title">LMS Platform</h1>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label" for="username">아이디</label>
+                        <input type="text" id="username" name="username" class="form-control" placeholder="아이디를 입력하세요"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="password">비밀번호</label>
+                        <input type="password" id="password" name="password" class="form-control"
+                            placeholder="비밀번호를 입력하세요" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">로그인</button>
+                </form>
+                <p class="text-center mt-4" style="font-size: 0.9rem;">
+                    계정이 없으신가요? <a href="#" id="toggleToRegister">회원가입</a>
+                </p>
+            </div>
 
-<div class="auth-container">
-    <!-- 로그인 폼 -->
-    <div id="formViewLogin" class="card auth-card">
-        <h1 class="brand-title">LMS Platform</h1>
-        <form id="loginForm">
-            <div class="form-group">
-                <label class="form-label" for="username">아이디</label>
-                <input type="text" id="username" name="username" class="form-control" placeholder="아이디를 입력하세요" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="password">비밀번호</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="비밀번호를 입력하세요" required>
-            </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">로그인</button>
-        </form>
-        <p class="text-center mt-4" style="font-size: 0.9rem;">
-            계정이 없으신가요? <a href="#" id="toggleToRegister">회원가입</a>
-        </p>
-    </div>
+            <!-- 회원가입 폼 -->
+            <div id="formViewRegister" class="card auth-card" style="display: none;">
+                <h1 class="brand-title">LMS 회원가입</h1>
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label class="form-label">역할</label>
+                        <select name="reg_role" id="reg_role" class="form-select">
+                            <option value="student">학습자</option>
+                            <option value="prof">교수자</option>
+                            <!-- 관리자는 초기 스크립트에 의해 제공되거나 특정 로직으로 생성 -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">이름</label>
+                        <input type="text" name="reg_name" class="form-control" placeholder="홍길동" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">아이디</label>
+                        <input type="text" name="reg_username" class="form-control" placeholder="아이디" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">비밀번호</label>
+                        <input type="password" name="reg_password" class="form-control" placeholder="비밀번호" required>
+                    </div>
 
-    <!-- 회원가입 폼 -->
-    <div id="formViewRegister" class="card auth-card" style="display: none;">
-        <h1 class="brand-title">LMS 회원가입</h1>
-        <form id="registerForm">
-            <div class="form-group">
-                <label class="form-label">역할</label>
-                <select name="reg_role" id="reg_role" class="form-select">
-                    <option value="student">학습자</option>
-                    <option value="prof">교수자</option>
-                    <!-- 관리자는 초기 스크립트에 의해 제공되거나 특정 로직으로 생성 -->
-                </select>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">가입하기</button>
+                </form>
+                <p class="text-center mt-4" style="font-size: 0.9rem;">
+                    이미 계정이 있으신가요? <a href="#" id="toggleToLogin">로그인</a>
+                </p>
             </div>
-            <div class="form-group">
-                <label class="form-label">이름</label>
-                <input type="text" name="reg_name" class="form-control" placeholder="홍길동" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label">아이디</label>
-                <input type="text" name="reg_username" class="form-control" placeholder="아이디" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label">비밀번호</label>
-                <input type="password" name="reg_password" class="form-control" placeholder="비밀번호" required>
-            </div>
-            
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">가입하기</button>
-        </form>
-        <p class="text-center mt-4" style="font-size: 0.9rem;">
-            이미 계정이 있으신가요? <a href="#" id="toggleToLogin">로그인</a>
-        </p>
-    </div>
-</div>
+    </main>
 
-<script type="module" src="js/auth.js"></script>
+    <script type="module">
+        import { renderFooter, renderNavbar } from './js/common.js';
+
+        // 페이지 로드 시 Navbar, Footer 렌더링
+        document.addEventListener('DOMContentLoaded', () => {
+            renderNavbar();
+            renderFooter();
+        });
+    </script>
+    <script type="module" src="js/auth.js"></script>
 </body>
+
 </html>

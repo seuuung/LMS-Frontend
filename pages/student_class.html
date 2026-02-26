@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>클래스 학습 - LMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <main class="main-content">
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <h3 style="padding: 0 1rem; margin-bottom: 1rem;">Student Menu</h3>
+                <div class="nav-item active" data-target="classDashboard">클래스 학습</div>
+            </aside>
+
+            <main class="content">
+                <section class="card">
+                    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+                        <a href="student.html" class="btn btn-back">&larr; 내 학습 공간</a>
+                        <h2 id="dashboardCourseTitle" style="margin:0;">클래스 대시보드</h2>
+                    </div>
+
+                    <div id="learningArea">
+                        <!-- 탭: 강의 / 자료실 / QnA -->
+                        <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+                            <button class="btn btn-tab active" id="tabLec">강의 목록</button>
+                            <button class="btn btn-tab" id="tabRes">자료실</button>
+                            <button class="btn btn-tab" id="tabQna">QnA</button>
+                        </div>
+
+                        <div id="lecArea">
+                            <h4>강의 목록</h4>
+                            <div id="myLectures" class="list-container"></div>
+                        </div>
+
+                        <div id="resArea" style="display:none;">
+                            <h4>자료 목록</h4>
+                            <div id="myResources" class="list-container"></div>
+                        </div>
+
+                        <div id="qnaArea" style="display:none;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <h4>QnA 게시판</h4>
+                                <button class="btn btn-primary" id="btnWriteQna"
+                                    style="padding:0.4rem 1rem; font-size:0.9rem;">질문하기</button>
+                            </div>
+                            <div id="qnaForm"
+                                style="display:none; margin-top:1rem; background:#f1f5f9; padding:1rem; border-radius:8px;">
+                                <input type="text" id="qTitle" class="form-control mb-4" placeholder="제목">
+                                <textarea id="qContent" class="form-control mb-4" placeholder="내용"></textarea>
+                                <button class="btn btn-primary" id="submitQna">등록</button>
+                            </div>
+                            <div id="myQnas" class="list-container"></div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </main>
+
+    <script type="module">
+        import { renderFooter } from '../js/common.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFooter();
+        });
+    </script>
+    <script type="module" src="../js/student_class.js"></script>
+</body>
+
+</html>
