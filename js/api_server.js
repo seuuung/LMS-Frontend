@@ -72,6 +72,7 @@ export const apiReal = {
     users: {
         getAll: async () => request('GET', '/users'),
         getById: async (id) => request('GET', `/users/${id}`),
+        update: async (id, updates) => request('PATCH', `/users/${id}`, updates),
         updateRole: async (id, role) => request('PATCH', `/users/${id}/role`, { role }),
         delete: async (id) => request('DELETE', `/users/${id}`)
     },
@@ -98,6 +99,7 @@ export const apiReal = {
     resources: {
         getByClass: async (classId) => request('GET', `/classes/${classId}/resources`),
         create: async (classId, title, desc, filename, lectureId) => request('POST', '/resources', { classId, title, description: desc, filename, lectureId }),
+        update: async (id, updates) => request('PATCH', `/resources/${id}`, updates),
         delete: async (id) => request('DELETE', `/resources/${id}`)
     },
 

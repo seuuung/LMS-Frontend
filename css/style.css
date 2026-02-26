@@ -41,6 +41,10 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  word-break: keep-all;
+  /* 한국어 어절 단위 줄바꿈 유지 */
+  overflow-wrap: break-word;
+  /* 긴 영문/URL이 영역을 벗어나는 것 방지 */
 }
 
 .main-content {

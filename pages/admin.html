@@ -54,12 +54,43 @@
 
                 <!-- 클래스 섹션 -->
                 <section id="classesSec" class="card" style="display:none;">
-                    <h2>전체 클래스 조회</h2>
+                    <div class="header-action">
+                        <h2>전체 클래스 조회</h2>
+                        <button class="btn btn-primary" id="addClassBtn">새 클래스 생성</button>
+                    </div>
+                    <!-- 클래스 생성 인라인 폼 -->
+                    <div id="classForm"
+                        style="display:none; margin-bottom:1.5rem; background:#f8fafc; padding:1.25rem; border-radius:12px; border:1px solid var(--border-color);">
+                        <div class="form-group" style="margin-bottom:1rem;">
+                            <input id="classTitle" class="form-control" placeholder="클래스 제목"
+                                style="width:100%; box-sizing:border-box;">
+                        </div>
+                        <div class="form-group" style="margin-bottom:1rem;">
+                            <input id="classDesc" class="form-control" placeholder="클래스 설명 (선택)"
+                                style="width:100%; box-sizing:border-box;">
+                        </div>
+                        <div class="form-group" style="margin-bottom:1rem;">
+                            <select id="classProfSelect" class="form-control"
+                                style="width:100%; box-sizing:border-box;">
+                                <option value="">-- 담당 교수자 선택 --</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                            <button id="btnCancelClass" class="btn"
+                                style="background:#e2e8f0; color:#0f172a; padding:0.4rem 1rem;">취소</button>
+                            <button id="btnCreateClass" class="btn btn-primary" style="padding:0.4rem 1rem;">생성</button>
+                        </div>
+                    </div>
+                    <!-- 클래스 검색 -->
+                    <div style="margin-bottom:1rem;">
+                        <input id="classSearch" class="form-control" placeholder="🔍 클래스명으로 검색..."
+                            style="width:100%; box-sizing:border-box;">
+                    </div>
                     <table class="data-table">
                         <thead>
                             <tr>
                                 <th>클래스명</th>
-                                <th>교수자 ID</th>
+                                <th>교수자</th>
                                 <th>생성일</th>
                                 <th>관리</th>
                             </tr>

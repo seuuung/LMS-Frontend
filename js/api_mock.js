@@ -7,8 +7,8 @@
 
 // 로컬 스토리지에 저장될 DB 키 이름
 const DB_KEY = 'lms_db';
-// 네트워크 통신 느낌을 주기 위한 인위적인 지연 시간 (0.2초)
-const DELAY_MS = 200;
+// 네트워크 통신 느낌을 주기 위한 인위적인 지연 시간 (0.1초)
+const DELAY_MS = 100;
 
 /**
  * 로컬 스토리지에서 전체 DB 객체를 가져오거나 초기화합니다.
@@ -116,6 +116,18 @@ export const apiMock = {
             saveDB(db);
             return true;
         },
+        update: async (userId, updates) => {
+            await delay();
+            const db = getDB();
+            const user = db.users.find(u => u.id === userId);
+            if (!user) throw new Error('유저를 찾을 수 없습니다.');
+            // 보안상 id, password, createdAt은 변경 불가
+            const { id, password, createdAt, ...allowed } = updates;
+            Object.assign(user, allowed);
+            saveDB(db);
+            const { password: _, ...rest } = user;
+            return rest;
+        },
         delete: async (userId) => {
             await delay();
             const db = getDB();
@@ -209,6 +221,15 @@ export const apiMock = {
             db.resources.push(newRes);
             saveDB(db);
             return newRes;
+        },
+        update: async (id, updates) => {
+            await delay();
+            const db = getDB();
+            const idx = db.resources.findIndex(r => r.id === id);
+            if (idx === -1) throw new Error('자료를 찾을 수 없습니다.');
+            db.resources[idx] = { ...db.resources[idx], ...updates };
+            saveDB(db);
+            return db.resources[idx];
         },
         delete: async (id) => {
             await delay();

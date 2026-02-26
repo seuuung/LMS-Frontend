@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 클래스 정보 로드 — getById() 사용 (getAll 비효율 제거)
+    // 클래스 정보 로드
     const currentClass = await api.classes.getById(classId);
 
     if (!currentClass) {
@@ -82,21 +82,54 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const lectureListEl = document.getElementById('lectureList');
         lectureListEl.innerHTML = lectures.map(l => `
-            <div class="list-item">
-                <span>
-                    <strong>${escapeHtml(l.title)}</strong>
-                    <button class="btn" style="background:#e2e8f0; color:#0f172a; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:0.5rem;" data-action="play" data-id="${l.id}">영상 보기</button>
-                    <button class="btn" style="background:#eff6ff; color:#3b82f6; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:0.5rem;" data-action="stats" data-id="${l.id}">수강률 통계</button>
-                </span>
-                <button class="action-btn del" data-action="delete-lecture" data-id="${l.id}">삭제</button>
+            <div class="list-item" data-lecture-id="${l.id}">
+                <div style="flex:1;">
+                    <!-- 표시 모드 -->
+                    <div class="lec-display" data-id="${l.id}">
+                        <strong>${escapeHtml(l.title)}</strong>
+                        <button class="btn" style="background:#e2e8f0; color:#0f172a; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:0.5rem;" data-action="play" data-id="${l.id}">영상 보기</button>
+                        <button class="btn" style="background:#eff6ff; color:#3b82f6; padding:0.2rem 0.5rem; font-size:0.8rem; margin-left:0.5rem;" data-action="stats" data-id="${l.id}">수강률 통계</button>
+                    </div>
+                    <!-- 수정 모드 -->
+                    <div class="lec-edit" data-id="${l.id}" style="display:none;">
+                        <div style="display:flex; flex-direction:column; gap:0.5rem; width:100%;">
+                            <input class="form-control lec-edit-title" data-id="${l.id}" value="${escapeHtml(l.title)}" placeholder="강의 제목" style="padding:0.3rem 0.5rem; font-size:0.9rem;">
+                            <input class="form-control lec-edit-desc" data-id="${l.id}" value="${escapeHtml(l.description || '')}" placeholder="강의 설명" style="padding:0.3rem 0.5rem; font-size:0.9rem;">
+                            <input class="form-control lec-edit-link" data-id="${l.id}" value="${escapeHtml(l.youtubeLink || '')}" placeholder="YouTube 링크" style="padding:0.3rem 0.5rem; font-size:0.9rem;">
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:0.3rem; align-items:center;">
+                    <button class="action-btn" data-action="edit-lecture" data-id="${l.id}">수정</button>
+                    <button class="action-btn" data-action="save-lecture" data-id="${l.id}" style="display:none; color:var(--primary-color);">저장</button>
+                    <button class="action-btn" data-action="cancel-edit-lecture" data-id="${l.id}" style="display:none;">취소</button>
+                    <button class="action-btn del" data-action="delete-lecture" data-id="${l.id}">삭제</button>
+                </div>
             </div>
         `).join('') || '<p style="font-size:0.9rem; color:var(--text-muted); margin-top:0.5rem;">등록된 강의가 없습니다.</p>';
 
         const resourceListEl = document.getElementById('resourceList');
         resourceListEl.innerHTML = resources.map(r => `
-            <div class="list-item">
-                <span>${escapeHtml(r.title)} <small>(${escapeHtml(r.filename)})</small></span>
-                <button class="action-btn del" data-action="delete-resource" data-id="${r.id}">삭제</button>
+            <div class="list-item" data-resource-id="${r.id}">
+                <div style="flex:1;">
+                    <!-- 표시 모드 -->
+                    <div class="res-display" data-id="${r.id}">
+                        <span>${escapeHtml(r.title)} <small>(${escapeHtml(r.filename)})</small></span>
+                    </div>
+                    <!-- 수정 모드 -->
+                    <div class="res-edit" data-id="${r.id}" style="display:none;">
+                        <div style="display:flex; flex-direction:column; gap:0.5rem; width:100%;">
+                            <input class="form-control res-edit-title" data-id="${r.id}" value="${escapeHtml(r.title)}" placeholder="자료 제목" style="padding:0.3rem 0.5rem; font-size:0.9rem;">
+                            <input class="form-control res-edit-desc" data-id="${r.id}" value="${escapeHtml(r.description || '')}" placeholder="자료 설명" style="padding:0.3rem 0.5rem; font-size:0.9rem;">
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:0.3rem; align-items:center;">
+                    <button class="action-btn" data-action="edit-resource" data-id="${r.id}">수정</button>
+                    <button class="action-btn" data-action="save-resource" data-id="${r.id}" style="display:none; color:var(--primary-color);">저장</button>
+                    <button class="action-btn" data-action="cancel-edit-resource" data-id="${r.id}" style="display:none;">취소</button>
+                    <button class="action-btn del" data-action="delete-resource" data-id="${r.id}">삭제</button>
+                </div>
             </div>
         `).join('') || '<p style="font-size:0.9rem; color:var(--text-muted); margin-top:0.5rem;">등록된 자료가 없습니다.</p>';
 
@@ -108,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const id = btn.dataset.id;
 
             if (action === 'play') {
-                location.href = user.role === 'admin' ? `lecture.html?classId=${classId}&lectureId=${id}` : `lecture.html?classId=${classId}&lectureId=${id}`;
+                location.href = `lecture.html?classId=${classId}&lectureId=${id}`;
             } else if (action === 'stats') {
                 location.href = `lecture_stats.html?classId=${classId}&lectureId=${id}`;
             } else if (action === 'delete-lecture') {
@@ -116,18 +149,99 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await api.lectures.delete(id);
                 showToast('삭제되었습니다.', 'success');
                 loadLecturesAndResources();
+            } else if (action === 'edit-lecture') {
+                // 인라인 수정 모드 전환
+                toggleLectureEdit(id, true);
+            } else if (action === 'cancel-edit-lecture') {
+                // 수정 취소
+                loadLecturesAndResources();
+            } else if (action === 'save-lecture') {
+                // 강의 저장
+                const title = document.querySelector(`.lec-edit-title[data-id="${id}"]`).value.trim();
+                const description = document.querySelector(`.lec-edit-desc[data-id="${id}"]`).value.trim();
+                const youtubeLink = document.querySelector(`.lec-edit-link[data-id="${id}"]`).value.trim();
+                if (!title) return showToast('강의 제목을 입력하세요.', 'error');
+                try {
+                    await api.lectures.update(id, { title, description, youtubeLink });
+                    showToast('강의가 수정되었습니다.', 'success');
+                    loadLecturesAndResources();
+                } catch (err) { handleApiError(err); }
             }
         };
 
         // 이벤트 위임: 자료 목록
         resourceListEl.onclick = async (e) => {
-            const btn = e.target.closest('[data-action="delete-resource"]');
+            const btn = e.target.closest('[data-action]');
             if (!btn) return;
-            if (!await confirmDelete('이 자료를 삭제하시겠습니까?')) return;
-            await api.resources.delete(btn.dataset.id);
-            showToast('삭제되었습니다.', 'success');
-            loadLecturesAndResources();
+            const action = btn.dataset.action;
+            const id = btn.dataset.id;
+
+            if (action === 'delete-resource') {
+                if (!await confirmDelete('이 자료를 삭제하시겠습니까?')) return;
+                await api.resources.delete(id);
+                showToast('삭제되었습니다.', 'success');
+                loadLecturesAndResources();
+            } else if (action === 'edit-resource') {
+                toggleResourceEdit(id, true);
+            } else if (action === 'cancel-edit-resource') {
+                loadLecturesAndResources();
+            } else if (action === 'save-resource') {
+                const title = document.querySelector(`.res-edit-title[data-id="${id}"]`).value.trim();
+                const description = document.querySelector(`.res-edit-desc[data-id="${id}"]`).value.trim();
+                if (!title) return showToast('자료 제목을 입력하세요.', 'error');
+                try {
+                    await api.resources.update(id, { title, description });
+                    showToast('자료가 수정되었습니다.', 'success');
+                    loadLecturesAndResources();
+                } catch (err) { handleApiError(err); }
+            }
         };
+    }
+
+    // 강의 인라인 수정 모드 전환 헬퍼
+    function toggleLectureEdit(id, showEdit) {
+        const display = document.querySelector(`.lec-display[data-id="${id}"]`);
+        const edit = document.querySelector(`.lec-edit[data-id="${id}"]`);
+        const editBtn = document.querySelector(`[data-action="edit-lecture"][data-id="${id}"]`);
+        const saveBtn = document.querySelector(`[data-action="save-lecture"][data-id="${id}"]`);
+        const cancelBtn = document.querySelector(`[data-action="cancel-edit-lecture"][data-id="${id}"]`);
+
+        if (showEdit) {
+            display.style.display = 'none';
+            edit.style.display = 'block';
+            editBtn.style.display = 'none';
+            saveBtn.style.display = 'inline-block';
+            cancelBtn.style.display = 'inline-block';
+        } else {
+            display.style.display = 'block';
+            edit.style.display = 'none';
+            editBtn.style.display = 'inline-block';
+            saveBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+        }
+    }
+
+    // 자료 인라인 수정 모드 전환 헬퍼
+    function toggleResourceEdit(id, showEdit) {
+        const display = document.querySelector(`.res-display[data-id="${id}"]`);
+        const edit = document.querySelector(`.res-edit[data-id="${id}"]`);
+        const editBtn = document.querySelector(`[data-action="edit-resource"][data-id="${id}"]`);
+        const saveBtn = document.querySelector(`[data-action="save-resource"][data-id="${id}"]`);
+        const cancelBtn = document.querySelector(`[data-action="cancel-edit-resource"][data-id="${id}"]`);
+
+        if (showEdit) {
+            display.style.display = 'none';
+            edit.style.display = 'block';
+            editBtn.style.display = 'none';
+            saveBtn.style.display = 'inline-block';
+            cancelBtn.style.display = 'inline-block';
+        } else {
+            display.style.display = 'block';
+            edit.style.display = 'none';
+            editBtn.style.display = 'inline-block';
+            saveBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+        }
     }
 
     // ========== 강의 업로드 페이지 이동 ==========
@@ -163,17 +277,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadLecturesAndResources();
     });
 
+    // ========== QnA 게시글 생성 ==========
+    document.getElementById('btnToggleQnaForm').addEventListener('click', () => {
+        const form = document.getElementById('qnaForm');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.getElementById('btnCancelQna').addEventListener('click', () => {
+        document.getElementById('qnaForm').style.display = 'none';
+        document.getElementById('qnaTitle').value = '';
+        document.getElementById('qnaContent').value = '';
+    });
+
+    document.getElementById('btnCreateQna').addEventListener('click', async () => {
+        const title = document.getElementById('qnaTitle').value.trim();
+        const content = document.getElementById('qnaContent').value.trim();
+        if (!title || !content) return showToast('제목과 내용을 모두 입력하세요.', 'error');
+
+        try {
+            await api.qnas.create(classId, user.id, title, content);
+            showToast('게시글이 등록되었습니다.', 'success');
+            document.getElementById('qnaForm').style.display = 'none';
+            document.getElementById('qnaTitle').value = '';
+            document.getElementById('qnaContent').value = '';
+            loadQnaAndStudents();
+        } catch (err) {
+            handleApiError(err);
+        }
+    });
+
     // ========== QnA / 수강생 로드 ==========
     async function loadQnaAndStudents() {
         const qnas = await api.qnas.getByClass(classId);
         const enrolls = await api.enrollments.getByClass(classId);
         const lectures = await api.lectures.getByClass(classId);
         const allViews = await api.lectureViews.getByClass(classId);
-        const allUsers = await api.users.getAll();
+        const allUsersLatest = await api.users.getAll();
 
         const qnaListEl = document.getElementById('qnaList');
         qnaListEl.innerHTML = qnas.map(q => {
-            const author = allUsers.find(u => u.id === q.authorId);
+            const author = allUsersLatest.find(u => u.id === q.authorId);
             const authorName = author ? author.name : q.authorId;
             return `
             <div class="list-item" style="flex-direction:column; align-items:flex-start;">
@@ -197,7 +340,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         document.getElementById('enrollmentList').innerHTML = enrolls.map(e => {
-            const student = allUsers.find(u => u.id === e.studentId);
+            const student = allUsersLatest.find(u => u.id === e.studentId);
             const studentName = student ? student.name : e.studentId;
 
             let avgProgress = 0;
