@@ -22,18 +22,6 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        .container {
-            max-width: 1400px;
-            width: 100%;
-            margin: 2rem auto;
-            padding: 0 2rem;
-            display: grid;
-            grid-template-columns: 3fr 1fr;
-            gap: 32px;
-            box-sizing: border-box;
-            align-items: start;
-        }
-
         .video-wrapper {
             background: #000;
             border-radius: var(--radius-lg);
@@ -54,34 +42,11 @@
             display: block;
         }
 
-        .upload-info {
-            background: var(--card-bg);
-            padding: 2rem;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-sm);
-            margin-top: 2rem;
-        }
-
-        .upload-info .form-group {
+        .upload-info-panel .form-group {
             margin-bottom: 1.5rem;
         }
 
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            position: sticky;
-            top: 2rem;
-        }
-
-        .action-card {
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .action-card h3 {
+        .side-card h3 {
             margin-top: 0;
             color: var(--text-main);
             margin-bottom: 1.5rem;
@@ -94,13 +59,6 @@
         }
 
         @media (max-width: 1024px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-
-            .sidebar {
-                position: static;
-            }
 
             .video-wrapper,
             .video-wrapper iframe {
@@ -128,7 +86,7 @@
     </header>
 
     <main class="main-content">
-        <div class="container">
+        <div class="container lecture-layout">
             <!-- 메인 뷰어 및 입력 영역 -->
             <section class="main-lecture">
                 <div class="video-wrapper" id="previewArea">
@@ -140,7 +98,7 @@
                     <p style="margin:0;">우측 패널에 유튜브 링크를 입력하고 [영상 연결]을 클릭하세요</p>
                 </div>
 
-                <div class="upload-info">
+                <div class="upload-info-panel">
                     <div class="form-group">
                         <input id="lecTitle" class="form-control" placeholder="강의 제목을 입력하세요"
                             style="width:100%; font-size:1.5rem; font-weight:700; box-sizing:border-box;">
@@ -154,7 +112,7 @@
 
             <!-- 사이드바 설정 영역 -->
             <aside class="sidebar">
-                <div class="action-card">
+                <div class="side-card">
                     <h3>영상 소스 연결</h3>
                     <div class="form-group" style="margin-bottom:1.5rem;">
                         <label for="lecLink"
@@ -166,7 +124,7 @@
                     </div>
                 </div>
 
-                <div class="action-card">
+                <div class="side-card">
                     <h3>자료 첨부 (선택)</h3>
                     <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">강의에 함께 등록할 파일이 있다면 첨부하세요.
                     </p>
@@ -178,7 +136,7 @@
                         style="font-size:0.85rem; color:var(--primary-color); font-weight:600; margin:0;"></p>
                 </div>
 
-                <div class="action-card">
+                <div class="side-card">
                     <h3>최종 등록</h3>
                     <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem;">강의와 자료가 모두 완벽한 상태라면
                         등록 버튼을 눌러주세요.</p>

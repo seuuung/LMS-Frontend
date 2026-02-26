@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.textContent = '로그인 중...';
             const user = await api.auth.login(username, password);
             setCurrentUser(user);
-            showToast('로그인 성공!', 'success');
+            showToast('로그인 성공', 'success');
             redirectByRole(user.role);
         } catch (error) {
             showToast(error.message, 'error');
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
             submitBtn.textContent = '가입 중...';
             await api.auth.register({ username, password, name, role });
-            showToast('회원가입 성공! 로그인해주세요.', 'success');
+            showToast('회원가입 성공, 로그인해주세요.', 'success');
 
             // 로그인 화면으로 전환
             formViewRegister.style.display = 'none';

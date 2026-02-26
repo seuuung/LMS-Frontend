@@ -1,5 +1,5 @@
 import { api } from './api.js';
-import { requireAuth, renderNavbar, showToast, escapeHtml, handleApiError } from './common.js';
+import { requireAuth, renderNavbar, showToast, escapeHtml, handleApiError, confirmDelete } from './common.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     requireAuth(['admin']); // 관리자만 접근 가능
@@ -26,8 +26,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // 초기 데이터 로드
-    loadData('users');
+    // URL 쿼리에 지정된 탭이 있으면 해당 탭 활성화, 없으면 기본 users 탭
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialTab = urlParams.get('t') || 'users';
+
+    let initialTabItem = Array.from(navItems).find(n => n.dataset.target === initialTab);
+    if (initialTabItem) {
+        initialTabItem.click();
+    } else {
+        navItems[0].click(); // fallback
+    }
 
     async function loadData(type) {
         if (type === 'users') {
@@ -66,7 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             tbody.onclick = async (e) => {
                 const btn = e.target.closest('[data-action="delete-user"]');
                 if (!btn) return;
-                if (!confirm('정말 삭제하시겠습니까?')) return;
+                if (!await confirmDelete('정말 삭제하시겠습니까?')) return;
                 try {
                     await api.users.delete(btn.dataset.id);
                     showToast('삭제되었습니다.', 'success');
@@ -83,7 +91,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>${escapeHtml(c.title)}</td>
                     <td>${escapeHtml(c.profId)}</td>
                     <td>${new Date(c.createdAt).toLocaleDateString()}</td>
-                    <td><button class="action-btn del" data-action="delete-class" data-id="${c.id}">삭제</button></td>
+                    <td>
+                        <button class="action-btn" style="color:var(--primary-color);" data-action="manage-class" data-id="${c.id}">관리</button>
+                        <button class="action-btn del" data-action="delete-class" data-id="${c.id}">삭제</button>
+                    </td>
                 </tr>
             `).join('');
 
@@ -91,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             tbody.onclick = async (e) => {
                 const btn = e.target.closest('[data-action="delete-class"]');
                 if (!btn) return;
-                if (!confirm('클래스를 삭제할까요? 하위 데이터도 모두 삭제됩니다.')) return;
+                if (!await confirmDelete('클래스를 삭제할까요? 하위 데이터도 모두 삭제됩니다.')) return;
                 try {
                     await api.classes.delete(btn.dataset.id);
                     showToast('삭제되었습니다.', 'success');
@@ -100,6 +111,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     handleApiError(err);
                 }
             };
+
+            // 이벤트 위임: 클래스 관리 (입장)
+            tbody.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-action="manage-class"]');
+                if (!btn) return;
+                location.href = `admin_class.html?classId=${btn.dataset.id}`;
+            });
         }
     }
 });

@@ -2,14 +2,14 @@ import { api } from './api.js';
 import { requireAuth, renderNavbar, renderFooter, escapeHtml, renderStatusBadge, handleApiError } from './common.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const user = requireAuth(['prof']);
+    const user = requireAuth(['prof', 'admin']);
     const params = new URLSearchParams(location.search);
     const classId = params.get('classId');
     const lectureId = params.get('lectureId');
 
     if (!classId || !lectureId) {
         alert('필수 정보가 누락되었습니다.');
-        location.href = 'professor.html';
+        location.href = user.role === 'admin' ? 'admin.html' : 'professor.html';
         return;
     }
 

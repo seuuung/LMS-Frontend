@@ -3,7 +3,7 @@ import { requireAuth, showToast, extractVideoId, handleApiError } from './common
 
 document.addEventListener('DOMContentLoaded', async () => {
     // requireAuth로 인증 로직 통합 (기존 alert/수동 체크 대체)
-    const currentUser = requireAuth(['prof']);
+    const currentUser = requireAuth(['prof', 'admin']);
     if (!currentUser) return;
 
     // URL에서 classId 파라미터 가져오기
@@ -12,15 +12,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!classId) {
         showToast('해당 클래스 정보를 찾을 수 없습니다.', 'error');
-        location.href = 'professor.html';
+        location.href = currentUser.role === 'admin' ? 'admin.html' : 'professor.html';
         return;
     }
 
     // 해당 클래스 유효성 확인
     const cls = await api.classes.getById(classId);
-    if (!cls || cls.profId !== currentUser.id) {
+    if (!cls || (currentUser.role !== 'admin' && cls.profId !== currentUser.id)) {
         showToast('해당 클래스에 접근할 권한이 없거나 존재하지 않는 클래스입니다.', 'error');
-        location.href = 'professor.html';
+        location.href = currentUser.role === 'admin' ? 'admin.html' : 'professor.html';
         return;
     }
 

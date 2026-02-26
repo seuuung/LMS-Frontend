@@ -10,15 +10,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const classId = urlParams.get('classId');
 
-    // 뒤로가기 링크 자동 치환
     const btnBack = document.querySelector('.btn-back');
     if (btnBack) {
-        btnBack.href = user.role === 'admin' ? 'admin.html' : 'professor.html';
+        btnBack.href = 'admin.html?t=classes';
     }
 
     if (!classId) {
         showToast('잘못된 접근입니다.', 'error');
-        location.href = user.role === 'admin' ? 'admin.html' : 'professor.html';
+        location.href = 'admin.html?t=classes';
         return;
     }
 
@@ -27,11 +26,44 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!currentClass) {
         showToast('클래스를 찾을 수 없습니다.', 'error');
-        location.href = user.role === 'admin' ? 'admin.html' : 'professor.html';
+        location.href = 'admin.html?t=classes';
         return;
     }
 
-    document.getElementById('dashboardCourseTitle').textContent = currentClass.title;
+    const allUsers = await api.users.getAll();
+    const profs = allUsers.filter(u => u.role === 'prof');
+    const currentProf = profs.find(p => p.id === currentClass.profId);
+
+    // [최고권한] 클래스 타이틀 및 담당 교수 변경 UI 렌더링
+    const titleArea = document.getElementById('dashboardCourseTitle');
+    titleArea.innerHTML = `
+        ${escapeHtml(currentClass.title)} 
+        <span style="font-size:1rem; font-weight:normal; margin-left:1rem; color:var(--text-muted);">
+            담당 교수: <strong>${currentProf ? escapeHtml(currentProf.name) : '미지정'}</strong>
+        </span>
+        <select id="profSelect" style="margin-left:0.5rem; padding:0.2rem; border-radius:4px;">
+            ${profs.map(p => `<option value="${p.id}" ${p.id === currentClass.profId ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('')}
+        </select>
+        <button id="btnChangeProf" class="btn" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:0.2rem 0.6rem; font-size:0.85rem; margin-left:0.3rem;">변경</button>
+    `;
+
+    document.getElementById('btnChangeProf').addEventListener('click', async () => {
+        const newProfId = document.getElementById('profSelect').value;
+        if (currentClass.profId === newProfId) return showToast('이미 해당 교수가 담당중입니다.', 'info');
+
+        const isConfirmed = await confirmDelete('담당 교수를 변경하시겠습니까?', {
+            title: '교수자 변경 확인',
+            confirmText: '변경',
+            confirmBtnClass: 'btn-primary'
+        });
+        if (!isConfirmed) return;
+
+        try {
+            await api.classes.update(classId, { profId: newProfId });
+            showToast('담당 교수가 성공적으로 변경되었습니다.', 'success');
+            setTimeout(() => location.reload(), 500);
+        } catch (e) { handleApiError(e); }
+    });
 
     // ========== 탭 제어 — initTabs 공통 함수 사용 ==========
     initTabs({

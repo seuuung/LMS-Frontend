@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>클래스 강제 관리(Admin) - LMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <main class="main-content">
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <h3 style="padding: 0 1rem; margin-bottom: 1rem;">Admin Menu</h3>
+                <div class="nav-item active" data-target="classDashboard">클래스 관리(최고 권한)</div>
+            </aside>
+
+            <main class="content">
+                <section class="card">
+                    <div style="display:flex; align-items:center; margin-bottom:1.5rem; gap:1rem;">
+                        <a href="admin.html" class="btn btn-back">&larr; 클래스 목록</a>
+                        <h2 id="dashboardCourseTitle" style="margin:0;">클래스 대시보드 (최고 관리)</h2>
+                    </div>
+
+                    <!-- 대시보드 탭 -->
+                    <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+                        <button class="btn btn-tab active" id="tabLec">강의 목록</button>
+                        <button class="btn btn-tab" id="tabRes">자료실</button>
+                        <button class="btn btn-tab" id="tabQna">QnA 및 수강생</button>
+                    </div>
+
+                    <!-- 강의 영역 -->
+                    <div id="lecArea">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4>강의 목록</h4>
+                            <button class="btn btn-primary" id="btnGoUpload"
+                                style="padding:0.4rem 1rem; font-size:0.9rem;">새 강의 업로드</button>
+                        </div>
+                        <div class="list-container scrollable" id="lectureList"></div>
+                    </div>
+
+                    <!-- 자료 영역 -->
+                    <div id="resArea" style="display:none;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4>자료실 목록</h4>
+                            <button class="btn btn-primary" id="btnToggleResForm"
+                                style="padding:0.4rem 1rem; font-size:0.9rem;">새 자료 업로드</button>
+                        </div>
+                        <div id="resForm"
+                            style="display:none; margin-top:1rem; background:#f8fafc; padding:1.25rem; border-radius:12px; border:1px solid var(--border-color);">
+                            <div class="form-group" style="margin-bottom:1rem;">
+                                <input id="resTitle" class="form-control" placeholder="자료 제목"
+                                    style="width:100%; box-sizing:border-box;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:1rem;">
+                                <input id="resDesc" class="form-control" placeholder="자료 설명 (선택)"
+                                    style="width:100%; box-sizing:border-box;">
+                            </div>
+                            <div class="form-group" style="margin-bottom:1rem;">
+                                <input id="resFile" type="file" class="form-control"
+                                    style="width:100%; box-sizing:border-box;">
+                            </div>
+                            <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                                <button id="btnCancelRes" class="btn"
+                                    style="background:#e2e8f0; color:#0f172a; padding:0.4rem 1rem;">취소</button>
+                                <button id="btnCreateRes" class="btn btn-primary"
+                                    style="padding:0.4rem 1rem;">등록</button>
+                            </div>
+                        </div>
+
+                        <div class="list-container scrollable" id="resourceList"></div>
+                    </div>
+
+                    <!-- 수강생 및 QnA 관리 영역 -->
+                    <div id="qnaArea" style="display:none;">
+                        <h4>QnA 게시글</h4>
+                        <div class="list-container scrollable" id="qnaList"></div>
+                        <h4 class="mt-4">수강생 현황</h4>
+                        <div class="list-container scrollable" id="enrollmentList"></div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </main>
+
+    <script type="module">
+        import { renderFooter } from '../js/common.js';
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFooter();
+        });
+    </script>
+    <script type="module" src="../js/admin_class.js"></script>
+</body>
+
+</html>

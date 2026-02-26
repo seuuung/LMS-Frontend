@@ -2,7 +2,7 @@ import { api } from './api.js';
 import { requireAuth, renderNavbar, showToast, escapeHtml, handleApiError } from './common.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const user = requireAuth(['student']);
+    const user = requireAuth(['student', 'admin']);
     if (!user) return;
     renderNavbar();
 

@@ -1,18 +1,26 @@
 /**
  * api_mock.js
  * 
- * localStorage를 다루는 디버깅용 Mock API 모듈입니다.
+ * localStorage를 활용하여 서버 없이 동작을 시뮬레이션하는 디버깅용 Mock API 모듈입니다.
+ * 모든 함수는 실제 API 통신과의 일관성을 위해 비동기(Promise)로 설계되었습니다.
  */
 
+// 로컬 스토리지에 저장될 DB 키 이름
 const DB_KEY = 'lms_db';
+// 네트워크 통신 느낌을 주기 위한 인위적인 지연 시간 (0.2초)
 const DELAY_MS = 200;
 
+/**
+ * 로컬 스토리지에서 전체 DB 객체를 가져오거나 초기화합니다.
+ */
 const getDB = () => {
     const data = localStorage.getItem(DB_KEY);
     if (data) return JSON.parse(data);
 
+    // 초기 실행 시 생성될 기본 데이터 구조
     const initDB = {
         users: [
+            // 관리자 및 테스트용 기본 계정
             { id: 'u_admin', username: 'admin', password: '1', name: '최고관리자', role: 'admin', createdAt: Date.now() },
             { id: 'u_test1', username: 'test1', password: '1', name: '테스트교수', role: 'prof', createdAt: Date.now() },
             { id: 'u_test2', username: 'test2', password: '1', name: '테스트학생', role: 'student', createdAt: Date.now() }
@@ -29,20 +37,37 @@ const getDB = () => {
     return initDB;
 };
 
+/**
+ * 수정된 DB 객체를 로컬 스토리지에 다시 저장합니다.
+ */
 const saveDB = (db) => {
     localStorage.setItem(DB_KEY, JSON.stringify(db));
 };
 
+/**
+ * 비동기 처리를 위한 딜레이 함수
+ */
 const delay = () => new Promise(res => setTimeout(res, DELAY_MS));
-const generateId = (prefix) => `${prefix}_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+/**
+ * 도메인별 유니크 ID 생성 함수 (2차 리뷰 제안: 식별자 충돌 방지 강화)
+ */
+const generateId = (prefix) => {
+    const uuid = typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID().split('-')[0]
+        : Math.random().toString(36).substring(2, 9);
+    return `${prefix}_${Date.now()}_${uuid}`;
+};
 
 export const apiMock = {
+    // --- 인증 관련 (로그인, 회원가입) ---
     auth: {
         login: async (username, password) => {
             await delay();
             const db = getDB();
             const user = db.users.find(u => u.username === username && u.password === password);
             if (!user) throw new Error('아이디 또는 비밀번호가 잘못되었습니다.');
+            // 보안상 비밀번호를 제외한 정보만 반환
             const { password: _, ...userInfo } = user;
             return userInfo;
         },
@@ -65,6 +90,8 @@ export const apiMock = {
             return { id: newUser.id, username: newUser.username, name: newUser.name, role: newUser.role };
         }
     },
+
+    // --- 유저 관리 (Admin용) ---
     users: {
         getAll: async () => {
             await delay();
@@ -97,6 +124,8 @@ export const apiMock = {
             return true;
         }
     },
+
+    // --- 클래스(과목) 관리 ---
     classes: {
         getAll: async () => {
             await delay();
@@ -131,6 +160,8 @@ export const apiMock = {
             return true;
         }
     },
+
+    // --- 강의 아이템 관리 ---
     lectures: {
         getByClass: async (classId) => {
             await delay();
@@ -164,6 +195,8 @@ export const apiMock = {
             saveDB(db);
         }
     },
+
+    // --- 강의 자료 관리 ---
     resources: {
         getByClass: async (classId) => {
             await delay();
@@ -184,6 +217,8 @@ export const apiMock = {
             saveDB(db);
         }
     },
+
+    // --- QnA 게시판 ---
     qnas: {
         getByClass: async (classId) => {
             await delay();
@@ -204,6 +239,8 @@ export const apiMock = {
             saveDB(db);
         }
     },
+
+    // --- 수강 정보 관리 ---
     enrollments: {
         getByClass: async (classId) => {
             await delay();
@@ -225,6 +262,8 @@ export const apiMock = {
             return newEnroll;
         }
     },
+
+    // --- 학습 진도율 추적 ---
     lectureViews: {
         getByClass: async (classId) => {
             await delay();
@@ -239,10 +278,13 @@ export const apiMock = {
             const db = getDB();
             let view = db.lecture_views.find(v => v.classId === classId && v.lectureId === lectureId && v.studentId === studentId);
             if (view) {
+                // 진도율은 이전보다 높은 경우에만 갱신
                 if (progressRate > (view.progressRate || 0)) view.progressRate = progressRate;
+                // 마지막 본 시점은 항상 갱신
                 if (lastPosition !== undefined) view.lastPosition = lastPosition;
                 view.viewedAt = Date.now();
             } else {
+                // 새로운 시청 기록 생성
                 db.lecture_views.push({ id: generateId('v'), classId, lectureId, studentId, progressRate, lastPosition: lastPosition || 0, viewedAt: Date.now() });
             }
             saveDB(db);

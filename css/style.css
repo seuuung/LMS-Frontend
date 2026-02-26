@@ -262,6 +262,7 @@ p {
   box-shadow: var(--shadow-md);
   position: sticky;
   top: 2rem;
+  align-self: start;
 }
 
 .nav-item {
@@ -366,7 +367,197 @@ p {
   color: #64748b;
 }
 
+/* Data Tables (Admin & Stats) */
+.stats-table,
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.stats-table th,
+.stats-table td,
+.data-table th,
+.data-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.stats-table th,
+.data-table th {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.stats-table tr:hover,
+.data-table tr:hover {
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
+/* Common Layouts classes for Lecture / Upload Pages */
+.lecture-layout {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.video-wrapper {
+  background: #000;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.video-wrapper iframe {
+  width: 100%;
+  height: 500px;
+  border: none;
+  display: block;
+}
+
+.lecture-info-panel,
+.upload-info-panel,
+.side-card {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-top: 2rem;
+}
+
+.side-card {
+  margin-top: 0;
+  padding: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .lecture-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+  }
+
+  .video-wrapper iframe {
+    height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .video-wrapper iframe {
+    height: 250px;
+  }
+}
+
 /* 유틸리티 */
 .cursor-pointer {
   cursor: pointer;
+}
+
+/* Action Buttons (삭제 버튼 등) */
+.action-btn {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn.del {
+  background-color: #fee2e2;
+  color: var(--danger-color);
+}
+
+.action-btn.del:hover {
+  background-color: var(--danger-color);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+/* ========== Custom Modal ========== */
+.custom-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.custom-modal {
+  background: var(--card-bg);
+  padding: 2.5rem 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  transform: translateY(20px);
+  transition: transform 0.2s ease-in-out;
+}
+
+.custom-modal h3 {
+  margin-bottom: 1rem;
+  color: var(--text-main);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.custom-modal p {
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  word-break: keep-all;
+  line-height: 1.5;
+}
+
+.custom-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.custom-modal-actions .btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: var(--radius-md);
+  flex: 1;
+}
+
+.custom-modal-actions .btn-cancel {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.custom-modal-actions .btn-cancel:hover {
+  background: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+.custom-modal-actions .btn-delete {
+  background: var(--danger-color);
+  color: #fff;
+}
+
+.custom-modal-actions .btn-delete:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
 }

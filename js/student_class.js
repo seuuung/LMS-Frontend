@@ -1,8 +1,8 @@
 import { api } from './api.js';
-import { requireAuth, renderNavbar, showToast, initTabs, renderStatusBadge, escapeHtml, handleApiError } from './common.js';
+import { requireAuth, renderNavbar, showToast, initTabs, renderStatusBadge, escapeHtml, handleApiError, confirmDelete } from './common.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const user = requireAuth(['student']);
+    const user = requireAuth(['student', 'admin']);
     if (!user) return;
     renderNavbar();
 
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="list-item" style="flex-direction:column; align-items:flex-start;">
                     <strong style="margin-bottom:0.5rem;">${escapeHtml(q.title)} <small>(${escapeHtml(q.authorId)})</small></strong>
                     <p style="font-size:0.9rem; margin-bottom:0;">${escapeHtml(q.content)}</p>
-                    ${q.authorId === user.id ? `<button class="action-btn del mt-4" style="align-self:flex-end;" data-action="delete-qna" data-id="${q.id}">내 게시글 삭제</button>` : ''}
+                        ${(q.authorId === user.username || user.role === 'admin') ? `<button class="action-btn del mt-4" style="align-self:flex-end;" data-action="delete-qna" data-id="${q.id}">내 게시글 삭제</button>` : ''}
                 </div>
             `).join('') || '<p style="color:var(--text-muted);">등록된 QnA가 없습니다.</p>';
 
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             myQnasEl.onclick = async (e) => {
                 const btn = e.target.closest('[data-action="delete-qna"]');
                 if (!btn) return;
-                if (!confirm('삭제하시겠습니까?')) return;
+                if (!await confirmDelete('삭제하시겠습니까?')) return;
                 await api.qnas.delete(btn.dataset.id);
                 showToast('삭제되었습니다', 'success');
                 loadClassContent('qna');

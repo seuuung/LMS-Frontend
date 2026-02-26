@@ -1,8 +1,8 @@
-import { requireAuth, showToast, extractVideoId, renderStatusBadge, escapeHtml, handleApiError } from './common.js';
+import { requireAuth, showToast, extractVideoId, renderStatusBadge, escapeHtml, handleApiError, confirmDelete } from './common.js';
 import { api } from './api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const user = requireAuth(['student', 'prof']);
+    const user = requireAuth(['student', 'prof', 'admin']);
     if (!user) return;
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const statusBadge = document.getElementById('statusBadge');
 
     // ========== 교수자 수정 기능 ==========
-    if (user.role === 'prof') {
+    if (user.role === 'prof' || user.role === 'admin') {
         const btnEdit = document.getElementById('btnEditLecture');
         const viewMode = document.getElementById('lectureViewMode');
         const editMode = document.getElementById('lectureEditMode');
@@ -177,6 +177,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         let skipCheckInterval;
         let progressInterval;
 
+        // 메모리 누수 방지 (2차 리뷰 제안: 페이지 이탈 시 타이머 해제)
+        window.addEventListener('beforeunload', () => {
+            if (skipCheckInterval) clearInterval(skipCheckInterval);
+            if (progressInterval) clearInterval(progressInterval);
+        });
+
         // 플레이어 준비 완료 시 허용 범위 설정 + 이어보기 + 감시 시작
         function onPlayerReady(event) {
             const duration = player.getDuration();
@@ -232,8 +238,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     maxAllowedTime = currentTime;
                 }
 
-                // lastPosition도 함께 저장 (이어보기용)
-                await api.lectureViews.updateProgress(classId, lectureId, user.id, percent, currentTime);
+                // lastPosition도 함께 저장 (이어보기용), 로딩 스피너 숨김 옵션 추가
+                await api.lectureViews.updateProgress(classId, lectureId, user.id, percent, currentTime, { skipLoading: true });
 
                 // DB 저장 값과 동일하게 표시 (API는 높은 값만 저장하므로 max 사용)
                 const displayRate = Math.max(percent, currentRate);
@@ -282,7 +288,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <a href="#" class="btn-download" data-filename="${escapeHtml(r.filename)}" 
                                style="align-self:flex-start; margin-top:0.7rem; font-size:0.8rem; padding:0.3rem 0.7rem; background:#eff6ff; color:#3b82f6; border-radius:6px; text-decoration:none; font-weight:600;">다운로드</a>
                         </div>
-                        ${user.role === 'prof' ? `
+                        ${(user.role === 'prof' || user.role === 'admin') ? `
                             <button class="btn-delete-res" data-id="${r.id}" 
                                     title="삭제"
                                     style="position:absolute; top:1rem; right:1rem; background:#fef2f2; border:none; color:#ef4444; cursor:pointer; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1rem; transition: background 0.2s;">
@@ -316,7 +322,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (deleteBtn) {
-            if (!confirm('자료를 삭제하시겠습니까?')) return;
+            if (!await confirmDelete('자료를 삭제하시겠습니까?')) return;
             try {
                 const resId = deleteBtn.getAttribute('data-id');
                 await api.resources.delete(resId);
@@ -329,7 +335,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // 교수자 자료 추가 로직
-    if (user.role === 'prof') {
+    if (user.role === 'prof' || user.role === 'admin') {
         document.getElementById('btnAddRes').addEventListener('click', async () => {
             const fileInput = document.getElementById('sidebarResFile');
             if (!fileInput.files || fileInput.files.length === 0) {

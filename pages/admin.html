@@ -8,59 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/style.css">
     <style>
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 250px 1fr;
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-
-        .sidebar {
-            background: var(--card-bg);
-            border-radius: var(--radius-lg);
-            padding: 1rem;
-            box-shadow: var(--shadow-md);
-            align-self: start;
-        }
-
-        .nav-item {
-            display: block;
-            padding: 0.75rem 1rem;
-            color: var(--text-main);
-            border-radius: var(--radius-md);
-            margin-bottom: 0.5rem;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-        }
-
-        .nav-item:hover,
-        .nav-item.active {
-            background: var(--primary-color);
-            color: #fff;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        th,
-        td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        th {
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-
-        tr:hover {
-            background-color: rgba(0, 0, 0, 0.01);
-        }
-
         .action-btn {
             background: none;
             border: none;
@@ -73,18 +20,12 @@
         .action-btn.del {
             color: var(--danger-color);
         }
-
-        .header-action {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
     </style>
 </head>
 
 <body>
     <main class="main-content">
-        <div class="container dashboard-grid">
+        <div class="dashboard-grid">
             <aside class="sidebar">
                 <h3 style="padding: 0 1rem; margin-bottom: 1rem;">Admin Menu</h3>
                 <div class="nav-item active" data-target="users">유저 관리</div>
@@ -98,7 +39,7 @@
                         <h2>유저 관리</h2>
                         <button class="btn btn-primary" id="addUserBtn">신규 유저 추가</button>
                     </div>
-                    <table>
+                    <table class="data-table">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -114,7 +55,7 @@
                 <!-- 클래스 섹션 -->
                 <section id="classesSec" class="card" style="display:none;">
                     <h2>전체 클래스 조회</h2>
-                    <table>
+                    <table class="data-table">
                         <thead>
                             <tr>
                                 <th>클래스명</th>

@@ -29,6 +29,11 @@ export const requireAuth = (allowedRoles = []) => {
         return null;
     }
 
+    // admin 사용자는 모든 권한 제어를 무시하고 pass (최고 관리자)
+    if (user.role === 'admin') {
+        return user;
+    }
+
     if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
         alert('접근 권한이 없습니다.');
         window.location.href = '../index.html';
@@ -114,6 +119,37 @@ export const showToast = (message, type = 'info') => {
     }, 3000);
 };
 
+// 전역 로딩 스피너 관리
+let loadingCount = 0;
+export const showLoading = () => {
+    loadingCount++;
+    if (loadingCount === 1) {
+        let overlay = document.getElementById('global-loading');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'global-loading';
+            overlay.innerHTML = `
+                <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); display:flex; justify-content:center; align-items:center; z-index:99999;">
+                    <div style="width:40px; height:40px; border:4px solid var(--border-color, #e2e8f0); border-top:4px solid var(--primary-color, #2563eb); border-radius:50%; animation:spin 1s linear infinite;"></div>
+                </div>
+                <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+            `;
+            document.body.appendChild(overlay);
+        } else {
+            overlay.style.display = 'flex';
+        }
+    }
+};
+
+export const hideLoading = () => {
+    loadingCount--;
+    if (loadingCount <= 0) {
+        loadingCount = 0;
+        const overlay = document.getElementById('global-loading');
+        if (overlay) overlay.style.display = 'none';
+    }
+};
+
 // HTML 이스케이프 (XSS 방지)
 export const escapeHtml = (str) => {
     if (str == null) return '';
@@ -190,4 +226,52 @@ export const handleApiError = (e, fallbackMsg = '오류가 발생했습니다.')
     const message = (e && e.message) ? e.message : fallbackMsg;
     showToast(message, 'error');
     console.error(e);
+};
+
+// 2단계 액션 확인 유틸리티 (커스텀 모달) - 삭제 등 위험 작업용 또는 범용
+export const confirmDelete = (message = '이 항목을 삭제하시겠습니까?', options = {}) => {
+    return new Promise((resolve) => {
+        const { title = '삭제 확인', confirmText = '삭제', confirmBtnClass = 'btn-delete' } = options;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'custom-modal-overlay';
+
+        const modal = document.createElement('div');
+        modal.className = 'custom-modal';
+
+        modal.innerHTML = `
+            <h3>${escapeHtml(title)}</h3>
+            <p>${escapeHtml(message)}</p>
+            <div class="custom-modal-actions">
+                <button class="btn btn-cancel" id="customModalCancel">취소</button>
+                <button class="btn ${confirmBtnClass}" id="customModalConfirm">${escapeHtml(confirmText)}</button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // 애니메이션 효과
+        setTimeout(() => {
+            overlay.style.opacity = '1';
+            modal.style.transform = 'translateY(0)';
+        }, 10);
+
+        const cleanup = (result) => {
+            overlay.style.opacity = '0';
+            modal.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                overlay.remove();
+                resolve(result);
+            }, 200); // transition duration
+        };
+
+        document.getElementById('customModalCancel').addEventListener('click', () => cleanup(false));
+        document.getElementById('customModalConfirm').addEventListener('click', () => cleanup(true));
+
+        // 오버레이 클릭 시 취소 처리
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) cleanup(false);
+        });
+    });
 };

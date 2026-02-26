@@ -1,5 +1,5 @@
 import { api } from './api.js';
-import { requireAuth, renderNavbar, showToast, escapeHtml, handleApiError } from './common.js';
+import { requireAuth, renderNavbar, showToast, escapeHtml, handleApiError, confirmDelete } from './common.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const user = requireAuth(['prof']);
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (action === 'go-class' || action === 'manage') {
             location.href = `professor_class.html?classId=${id}`;
         } else if (action === 'delete') {
-            if (!confirm('클래스를 삭제하시겠습니까?')) return;
+            if (!await confirmDelete('클래스를 삭제하시겠습니까?')) return;
             try {
                 await api.classes.delete(id);
                 showToast('삭제되었습니다.', 'success');
