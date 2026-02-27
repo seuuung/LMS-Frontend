@@ -61,67 +61,67 @@ export const apiReal = {
     // --- 인증 (로그인, 회원가입) ---
     auth: {
         login: async (username, password) => {
-            return request('POST', '/auth/login', { username, password });
+            return request('POST', '/api/auth/login', { username, password });
         },
         register: async (userData) => {
-            return request('POST', '/auth/register', userData);
+            return request('POST', '/api/auth/register', userData);
         }
     },
 
     // --- 유저 정보 관리 ---
     users: {
-        getAll: async () => request('GET', '/users'),
-        getById: async (id) => request('GET', `/users/${id}`),
-        update: async (id, updates) => request('PATCH', `/users/${id}`, updates),
-        updateRole: async (id, role) => request('PATCH', `/users/${id}/role`, { role }),
-        delete: async (id) => request('DELETE', `/users/${id}`)
+        getAll: async () => request('GET', '/api/users'),
+        getById: async (id) => request('GET', `/api/users/${id}`),
+        update: async (id, updates) => request('PATCH', `/api/users/${id}`, updates),
+        updateRole: async (id, role) => request('PATCH', `/api/users/${id}/role`, { role }),
+        delete: async (id) => request('DELETE', `/api/users/${id}`)
     },
 
     // --- 클래스(과목) 관리 ---
     classes: {
-        getAll: async () => request('GET', '/classes'),
-        getById: async (id) => request('GET', `/classes/${id}`),
-        create: async (title, desc, profId) => request('POST', '/classes', { title, description: desc, profId }),
-        update: async (id, updates) => request('PATCH', `/classes/${id}`, updates),
-        delete: async (id) => request('DELETE', `/classes/${id}`)
+        getAll: async () => request('GET', '/api/classes'),
+        getById: async (id) => request('GET', `/api/classes/${id}`),
+        create: async (title, desc, profId) => request('POST', '/api/classes', { title, description: desc, profId }),
+        update: async (id, updates) => request('PATCH', `/api/classes/${id}`, updates),
+        delete: async (id) => request('DELETE', `/api/classes/${id}`)
     },
 
     // --- 강의 아이템 관리 ---
     lectures: {
-        getByClass: async (classId) => request('GET', `/classes/${classId}/lectures`),
-        getById: async (id) => request('GET', `/lectures/${id}`),
-        create: async (classId, title, desc, link) => request('POST', '/lectures', { classId, title, description: desc, youtubeLink: link }),
-        update: async (id, updates) => request('PATCH', `/lectures/${id}`, updates),
-        delete: async (id) => request('DELETE', `/lectures/${id}`)
+        getByClass: async (classId) => request('GET', `/api/classes/${classId}/lectures`),
+        getById: async (id) => request('GET', `/api/lectures/${id}`),
+        create: async (classId, title, desc, link) => request('POST', '/api/lectures', { classId, title, description: desc, youtubeLink: link }),
+        update: async (id, updates) => request('PATCH', `/api/lectures/${id}`, updates),
+        delete: async (id) => request('DELETE', `/api/lectures/${id}`)
     },
 
     // --- 강의 자료실 관리 ---
     resources: {
-        getByClass: async (classId) => request('GET', `/classes/${classId}/resources`),
-        create: async (classId, title, desc, filename, lectureId) => request('POST', '/resources', { classId, title, description: desc, filename, lectureId }),
-        update: async (id, updates) => request('PATCH', `/resources/${id}`, updates),
-        delete: async (id) => request('DELETE', `/resources/${id}`)
+        getByClass: async (classId) => request('GET', `/api/classes/${classId}/resources`),
+        create: async (classId, title, desc, filename, lectureId) => request('POST', '/api/resources', { classId, title, description: desc, filename, lectureId }),
+        update: async (id, updates) => request('PATCH', `/api/resources/${id}`, updates),
+        delete: async (id) => request('DELETE', `/api/resources/${id}`)
     },
 
     // --- QnA 게시판 관리 ---
     qnas: {
-        getByClass: async (classId) => request('GET', `/classes/${classId}/qnas`),
-        create: async (classId, authorId, title, content) => request('POST', '/qnas', { classId, authorId, title, content }),
-        delete: async (id) => request('DELETE', `/qnas/${id}`)
+        getByClass: async (classId) => request('GET', `/api/classes/${classId}/qnas`),
+        create: async (classId, authorId, title, content) => request('POST', '/api/qnas', { classId, authorId, title, content }),
+        delete: async (id) => request('DELETE', `/api/qnas/${id}`)
     },
 
     // --- 수강 신청 정보 ---
     enrollments: {
-        getByClass: async (classId) => request('GET', `/classes/${classId}/enrollments`),
-        getByStudent: async (studentId) => request('GET', `/students/${studentId}/enrollments`),
-        create: async (classId, studentId) => request('POST', '/enrollments', { classId, studentId })
+        getByClass: async (classId) => request('GET', `/api/classes/${classId}/enrollments`),
+        getByStudent: async (studentId) => request('GET', `/api/students/${studentId}/enrollments`),
+        create: async (classId, studentId) => request('POST', '/api/enrollments', { classId, studentId })
     },
 
     // --- 강의 진도율 및 시청 정보 추적 ---
     lectureViews: {
-        getByClass: async (classId) => request('GET', `/classes/${classId}/views`),
-        getByClassAndStudent: async (classId, studentId) => request('GET', `/classes/${classId}/students/${studentId}/views`),
+        getByClass: async (classId) => request('GET', `/api/classes/${classId}/views`),
+        getByClassAndStudent: async (classId, studentId) => request('GET', `/api/classes/${classId}/students/${studentId}/views`),
         updateProgress: async (classId, lectureId, studentId, progressRate, lastPosition) =>
-            request('POST', '/views/progress', { classId, lectureId, studentId, progressRate, lastPosition })
+            request('POST', '/api/views/progress', { classId, lectureId, studentId, progressRate, lastPosition })
     }
 };
