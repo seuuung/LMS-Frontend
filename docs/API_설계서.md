@@ -1,7 +1,7 @@
 # 프론트엔드 - 백엔드 API 연동 명세서
 
 현재 LMS 프론트엔드는 로컬 환경 테스트를 위해 `api_mock.js` (localStorage 기반)로 통신하고 있으나, 백엔드 프레임워크와의 데이터 통신을 위해 `api_server.js`에 모든 Fetch 요청 인터페이스가 완벽히 구성(1:1 매핑)되어 있습니다.
-차후 백엔드 개발 시 **아래 32종의 REST API URI와 매개변수 구조**만 준수하여 서버를 구축하시면, 프론트엔드쪽 추가 수정 없이(`api.js`의 `USE_MOCK_API = false`로 옵션 1줄 전환) 즉시 100% 가동됩니다.
+차후 백엔드 개발 시 **아래 33종의 REST API URI와 매개변수 구조**만 준수하여 서버를 구축하시면, 프론트엔드쪽 추가 수정 없이(`api.js`의 `USE_MOCK_API = false`로 옵션 1줄 전환) 즉시 100% 가동됩니다.
 
 ---
 
@@ -17,6 +17,7 @@
 | 전체 유저 | `/api/users` | GET | None |
 | 단일 유저 | `/api/users/:id` | GET | Path: `id` |
 | 유저 정보 수정 | `/api/users/:id` | PATCH | `updates` (변경 항목 객체: name 등) |
+| 유저 비밀번호 수정 | `/api/users/:id/password` | PATCH | `{ password }` |
 | 역할 변경 | `/api/users/:id/role` | PATCH | `{ role }` |
 | 유저 삭제 | `/api/users/:id` | DELETE | Path: `id` |
 
