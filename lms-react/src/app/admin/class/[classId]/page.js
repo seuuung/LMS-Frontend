@@ -10,11 +10,13 @@ import Link from 'next/link';
 
 import Modal from '@/components/ui/Modal';
 import TabBar from '@/components/ui/TabBar';
+import Sidebar from '@/components/ui/Sidebar';
 import LectureList from '@/components/ui/LectureList';
 import ResourceList from '@/components/ui/ResourceList';
 import ResourceForm from '@/components/ui/ResourceForm';
 import QnaList from '@/components/ui/QnaList';
 import EnrollmentList from '@/components/ui/EnrollmentList';
+import ActivityLogModal from '@/components/ui/ActivityLogModal';
 
 /** 
  * 관리자 클래스 상세 대시보드
@@ -51,13 +53,20 @@ export default function AdminClassDashboard() {
     const [allViews, setAllViews] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
     const [profs, setProfs] = useState([]);
+    const [logs, setLogs] = useState([]);
 
     const [selectedProfId, setSelectedProfId] = useState('');
     const [isResFormOpen, setIsResFormOpen] = useState(false);
+    const [logModalContext, setLogModalContext] = useState(null);
 
     // 클래스 수정 모달용 상태
     const [isEditClassModalOpen, setIsEditClassModalOpen] = useState(false);
     const [editClassForm, setEditClassForm] = useState({ title: '', description: '' });
+
+    // 수동 수강생 추가 로직 상태
+    const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
+    const [studentSearchQuery, setStudentSearchQuery] = useState('');
+    const [studentSearchResults, setStudentSearchResults] = useState([]);
 
     // 탭 정의
     const tabs = [
@@ -95,24 +104,28 @@ export default function AdminClassDashboard() {
             setProfs(users.filter(u => u.role === 'prof'));
 
             if (type === 'lec' || type === 'res') {
-                const [fetchedLectures, fetchedResources] = await Promise.all([
+                const [fetchedLectures, fetchedResources, fetchedLogs] = await Promise.all([
                     api.lectures.getByClass(classId),
-                    api.resources.getByClass(classId)
+                    api.resources.getByClass(classId),
+                    api.logs.getAll()
                 ]);
                 setLectures(fetchedLectures);
                 setResources(fetchedResources);
+                setLogs(fetchedLogs);
             } else if (type === 'qna') {
                 const fetchedQnas = await api.qnas.getByClass(classId);
                 setQnas(fetchedQnas);
             } else if (type === 'enroll') {
-                const [fetchedEnrolls, fetchedLectures, fetchedViews] = await Promise.all([
+                const [fetchedEnrolls, fetchedLectures, fetchedViews, fetchedLogs] = await Promise.all([
                     api.enrollments.getByClass(classId),
                     api.lectures.getByClass(classId),
-                    api.lectureViews.getByClass(classId)
+                    api.lectureViews.getByClass(classId),
+                    api.logs.getAll()
                 ]);
                 setEnrolls(fetchedEnrolls);
                 setLectures(fetchedLectures);
                 setAllViews(fetchedViews);
+                setLogs(fetchedLogs);
             }
         } catch (err) {
             showToast(err.message || '데이터를 불러오는 데 실패했습니다.', 'error');
@@ -183,6 +196,37 @@ export default function AdminClassDashboard() {
         }
     };
 
+    const handleCreateQna = async (title, content, isPrivate) => {
+        try {
+            await api.qnas.create(classId, user.id, title, content, isPrivate);
+            showToast('게시글이 등록되었습니다.', 'success');
+            loadData('qna');
+        } catch (err) {
+            showToast(err.message || '오류가 발생했습니다.', 'error');
+        }
+    };
+
+    const handleAddReply = async (qnaId, authorId, content) => {
+        try {
+            await api.qnas.addReply(qnaId, authorId, content);
+            showToast('답변이 등록되었습니다.', 'success');
+            loadData('qna');
+        } catch (err) {
+            showToast(err.message || '오류가 발생했습니다.', 'error');
+        }
+    };
+
+    const handleDeleteReply = async (qnaId, replyId) => {
+        if (!await confirm('답변을 삭제하시겠습니까?')) return;
+        try {
+            await api.qnas.deleteReply(qnaId, replyId);
+            showToast('답변이 삭제되었습니다.', 'success');
+            loadData('qna');
+        } catch (err) {
+            showToast(err.message || '오류가 발생했습니다.', 'error');
+        }
+    };
+
     const handleSaveClassInfo = async (e) => {
         e.preventDefault();
         try {
@@ -195,32 +239,55 @@ export default function AdminClassDashboard() {
         }
     };
 
+    const handleSearchStudent = async () => {
+        if (!studentSearchQuery.trim()) {
+            showToast('검색어를 입력하세요.', 'error');
+            return;
+        }
+        try {
+            const results = await api.users.search(studentSearchQuery);
+            setStudentSearchResults(results.filter(u => u.role === 'student'));
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    };
+
+    const handleAddStudent = async (studentId) => {
+        try {
+            await api.enrollments.create(classId, studentId);
+            showToast('수강생이 추가되었습니다.', 'success');
+            setIsAddStudentModalOpen(false);
+            setStudentSearchQuery('');
+            setStudentSearchResults([]);
+            loadData('enroll');
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    };
+
     if (!user || user.role !== 'admin' || !currentClass) return null;
 
     return (
         <div className="dashboard-grid">
-            <aside className="sidebar">
-                <h3 style={{ padding: '0 1rem', marginBottom: '1rem' }}>Admin Menu</h3>
-                <Link href="/admin?t=users" className="nav-item">사용자 관리</Link>
-                <Link href="/admin?t=classes" className="nav-item active">전체 클래스 관리</Link>
-            </aside>
+            <Sidebar />
 
             <div className="content">
                 <section className="card">
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem' }}>
-                        <Link href="/admin?t=classes" className="btn btn-back" style={{ whiteSpace: 'nowrap' }}>&larr; 클래스 목록</Link>
-                        <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <h2 style={{ margin: 0 }}>{currentClass.title} - 대시보드 (관리자)</h2>
-                                <button
-                                    className="action-btn"
-                                    onClick={() => {
-                                        setEditClassForm({ title: currentClass.title, description: currentClass.description || '' });
-                                        setIsEditClassModalOpen(true);
-                                    }}
-                                >수정</button>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                            <Link href="/admin?t=classes" className="btn btn-back" style={{ whiteSpace: 'nowrap' }}>&larr; 클래스 목록</Link>
+                            <div style={{ background: '#e0e7ff', color: '#4338ca', padding: '0.4rem 0.8rem', borderRadius: '6px', fontWeight: 600, fontSize: '0.9rem' }}>
+                                참여 코드: {currentClass.enrollmentCode || '발급안됨'}
                             </div>
+                            <button
+                                className="action-btn"
+                                onClick={() => {
+                                    setEditClassForm({ title: currentClass.title, description: currentClass.description || '' });
+                                    setIsEditClassModalOpen(true);
+                                }}
+                            >수정</button>
                         </div>
+                        <h2 style={{ margin: 0 }}>{currentClass.title} - 대시보드 (관리자)</h2>
                     </div>
 
                     {/* 담당 교수 변경 영역 */}
@@ -258,6 +325,8 @@ export default function AdminClassDashboard() {
                                 classId={classId}
                                 uploadPath={`/admin/class/${classId}/upload`}
                                 onDelete={handleDeleteLecture}
+                                logs={logs}
+                                onViewLog={(id, title) => setLogModalContext({ entityType: 'lecture', entityId: id, title: `강의 '${title}' 수정 이력` })}
                             />
                         )}
 
@@ -282,16 +351,26 @@ export default function AdminClassDashboard() {
 
                         {/* QnA 게시판 탭 */}
                         {activeTab === 'qna' && (
-                            <div>
-                                <h4 style={{ marginBottom: '1rem' }}>QnA 관리</h4>
-                                <QnaList qnas={qnas} allUsers={allUsers} onDelete={handleDeleteQna} />
-                            </div>
+                            <QnaList
+                                qnas={qnas}
+                                allUsers={allUsers}
+                                currentUser={user}
+                                onDelete={handleDeleteQna}
+                                onAddReply={handleAddReply}
+                                onDeleteReply={handleDeleteReply}
+                                onCreateQna={handleCreateQna}
+                            />
                         )}
 
                         {/* 수강생 관리 탭 */}
                         {activeTab === 'enroll' && (
                             <div>
-                                <h4 style={{ marginBottom: '1rem' }}>수강생 현황</h4>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                    <h4 style={{ margin: 0 }}>수강생 현황</h4>
+                                    <button className="btn btn-primary" onClick={() => setIsAddStudentModalOpen(true)}>
+                                        + 수동 등록
+                                    </button>
+                                </div>
                                 <EnrollmentList
                                     enrolls={enrolls}
                                     allUsers={allUsers}
@@ -335,6 +414,53 @@ export default function AdminClassDashboard() {
                     </div>
                 </form>
             </Modal>
+
+            {/* 수강생 수동 추가 Modal */}
+            <Modal isOpen={isAddStudentModalOpen} onClose={() => { setIsAddStudentModalOpen(false); setStudentSearchQuery(''); setStudentSearchResults([]); }} title="수강생 수동 등록">
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <input
+                        type="text"
+                        className="form-control"
+                        placeholder="이름 또는 아이디로 검색"
+                        value={studentSearchQuery}
+                        onChange={e => setStudentSearchQuery(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleSearchStudent()}
+                    />
+                    <button className="btn btn-primary" onClick={handleSearchStudent}>검색</button>
+                </div>
+                <div className="list-container" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                    {studentSearchResults.length === 0 ? (
+                        <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>검색 결과가 없습니다.</p>
+                    ) : (
+                        studentSearchResults.map(student => {
+                            const isEnrolled = enrolls.some(e => e.studentId === student.id);
+                            return (
+                                <div className="list-item" key={student.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <strong>{student.name}</strong> <small style={{ color: 'var(--text-muted)' }}>({student.username})</small>
+                                    </div>
+                                    <button
+                                        className="btn"
+                                        style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', background: isEnrolled ? '#e2e8f0' : '#3b82f6', color: isEnrolled ? '#64748b' : '#fff', cursor: isEnrolled ? 'not-allowed' : 'pointer', border: 'none' }}
+                                        onClick={() => !isEnrolled && handleAddStudent(student.id)}
+                                        disabled={isEnrolled}
+                                    >
+                                        {isEnrolled ? '등록됨' : '등록'}
+                                    </button>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            </Modal>
+
+            {/* 활동 내역 모달 */}
+            <ActivityLogModal
+                isOpen={!!logModalContext}
+                onClose={() => setLogModalContext(null)}
+                logs={logModalContext ? logs.filter(l => l.entityType === logModalContext.entityType && l.entityId === logModalContext.entityId) : []}
+                title={logModalContext?.title}
+            />
         </div>
     );
 }

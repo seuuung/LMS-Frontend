@@ -37,6 +37,7 @@ const getDB = () => {
         qnas: [],
         enrollments: [],
         lecture_views: [],
+        logs: [],
     };
 
     localStorage.setItem(DB_KEY, JSON.stringify(initDB));
@@ -68,6 +69,24 @@ const generateId = (prefix) => {
     return `${prefix}_${Date.now()}_${uuid}`;
 };
 
+/**
+ * DB 액션 수행 시 타임스탬프와 함께 로그를 남기는 헬퍼 함수
+ */
+const createLog = (db, action, entityType, entityId, message, actorId = 'system', classId = null) => {
+    if (!db.logs) db.logs = [];
+    const newLog = {
+        id: generateId('log'),
+        action,
+        entityType,
+        entityId,
+        message,
+        actorId,
+        classId,
+        timestamp: Date.now()
+    };
+    db.logs.push(newLog);
+};
+
 export const apiMock = {
     // --- 인증 관련 (로그인, 회원가입) ---
     auth: {
@@ -97,15 +116,18 @@ export const apiMock = {
             if (db.users.some(u => u.username === userData.username)) {
                 throw new Error('이미 존재하는 아이디입니다.');
             }
+            const roleNames = { student: '학생', prof: '교수자', admin: '관리자' };
             const newUser = {
                 id: generateId('u'),
                 username: userData.username,
                 password: userData.password,
                 name: userData.name,
                 role: userData.role,
-                createdAt: Date.now()
+                createdAt: Date.now(),
+                updatedAt: Date.now()
             };
             db.users.push(newUser);
+            createLog(db, 'CREATE', 'user', newUser.id, `새로운 사용자("${newUser.username}") 등록 [이름: ${newUser.name}, 역할: ${roleNames[newUser.role] || newUser.role}]`);
             saveDB(db);
             return { id: newUser.id, username: newUser.username, name: newUser.name, role: newUser.role };
         }
@@ -136,7 +158,11 @@ export const apiMock = {
             const db = getDB();
             const user = db.users.find(u => u.id === userId);
             if (!user) throw new Error('유저를 찾을 수 없습니다.');
+            const roleNames = { student: '학생', prof: '교수자', admin: '관리자' };
+            const oldRole = user.role;
             user.role = newRole;
+            user.updatedAt = Date.now();
+            createLog(db, 'UPDATE', 'user', user.id, `사용자("${user.username}") 역할 변경: ${roleNames[oldRole] || oldRole} → ${roleNames[newRole] || newRole}`);
             saveDB(db);
             return true;
         },
@@ -147,26 +173,55 @@ export const apiMock = {
             if (!user) throw new Error('유저를 찾을 수 없습니다.');
             // 보안상 id, password, createdAt은 변경 불가
             const { id, password, createdAt, ...allowed } = updates;
+            // 변경 내역 상세 기록
+            const changes = [];
+            for (const [key, value] of Object.entries(allowed)) {
+                if (user[key] !== value) {
+                    const fieldNames = { name: '이름', email: '이메일', role: '역할' };
+                    const label = fieldNames[key] || key;
+                    changes.push(`${label}: "${user[key] || '(없음)'}" → "${value}"`);
+                }
+            }
             Object.assign(user, allowed);
+            user.updatedAt = Date.now();
+            const detail = changes.length > 0 ? ` [변경: ${changes.join(', ')}]` : '';
+            createLog(db, 'UPDATE', 'user', user.id, `사용자("${user.username}") 정보 수정${detail}`);
             saveDB(db);
             const { password: _, ...rest } = user;
             return rest;
         },
-        updatePassword: async (userId, newPassword) => {
+        updatePassword: async (userId, currentPassword, newPassword) => {
             await delay();
             const db = getDB();
             const user = db.users.find(u => u.id === userId);
             if (!user) throw new Error('유저를 찾을 수 없습니다.');
+            if (user.password !== currentPassword) throw new Error('기존 비밀번호가 일치하지 않습니다.');
             user.password = newPassword;
+            user.updatedAt = Date.now();
+            createLog(db, 'UPDATE', 'user', user.id, `사용자("${user.username}") 비밀번호가 변경되었습니다.`);
             saveDB(db);
             return true;
         },
         delete: async (userId) => {
             await delay();
             const db = getDB();
+            const user = db.users.find(u => u.id === userId);
+            if (user) {
+                createLog(db, 'DELETE', 'user', userId, `사용자("${user.username}")가 삭제되었습니다.`);
+            }
             db.users = db.users.filter(u => u.id !== userId);
             saveDB(db);
             return true;
+        },
+        search: async (query) => {
+            await delay();
+            const lowerQuery = query.toLowerCase();
+            return getDB().users
+                .filter(u => u.name.toLowerCase().includes(lowerQuery) || u.username.toLowerCase().includes(lowerQuery))
+                .map(u => {
+                    const { password, ...rest } = u;
+                    return rest;
+                });
         }
     },
 
@@ -187,8 +242,10 @@ export const apiMock = {
         create: async (title, description, profId) => {
             await delay();
             const db = getDB();
-            const newClass = { id: generateId('c'), title, description, profId, createdAt: Date.now() };
+            const enrollmentCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const newClass = { id: generateId('c'), title, description, profId, enrollmentCode, createdAt: Date.now() };
             db.classes.push(newClass);
+            createLog(db, 'CREATE', 'class', newClass.id, `새로운 클래스("${title}")가 개설되었습니다.`, profId, newClass.id);
             saveDB(db);
             return newClass;
         },
@@ -198,12 +255,17 @@ export const apiMock = {
             const idx = db.classes.findIndex(c => c.id === classId);
             if (idx === -1) throw new Error('클래스를 찾을 수 없습니다.');
             db.classes[idx] = { ...db.classes[idx], ...updates };
+            createLog(db, 'UPDATE', 'class', classId, `클래스("${db.classes[idx].title}") 정보가 수정되었습니다.`, 'system', classId);
             saveDB(db);
             return db.classes[idx];
         },
         delete: async (classId) => {
             await delay();
             const db = getDB();
+            const cls = db.classes.find(c => c.id === classId);
+            if (cls) {
+                createLog(db, 'DELETE', 'class', classId, `클래스("${cls.title}")가 삭제되었습니다.`, 'system', classId);
+            }
             db.classes = db.classes.filter(c => c.id !== classId);
             saveDB(db);
             return true;
@@ -230,6 +292,7 @@ export const apiMock = {
             const db = getDB();
             const newLecture = { id: generateId('l'), classId, title, description, youtubeLink, createdAt: Date.now() };
             db.lectures.push(newLecture);
+            createLog(db, 'CREATE', 'lecture', newLecture.id, `새 강의("${title}")가 등록되었습니다.`, 'system', classId);
             saveDB(db);
             return newLecture;
         },
@@ -239,12 +302,17 @@ export const apiMock = {
             const idx = db.lectures.findIndex(l => l.id === id);
             if (idx === -1) throw new Error('강의를 찾을 수 없습니다.');
             db.lectures[idx] = { ...db.lectures[idx], ...updates };
+            createLog(db, 'UPDATE', 'lecture', id, `강의("${db.lectures[idx].title}")가 수정되었습니다.`, 'system', db.lectures[idx].classId);
             saveDB(db);
             return db.lectures[idx];
         },
         delete: async (id) => {
             await delay();
             const db = getDB();
+            const lec = db.lectures.find(l => l.id === id);
+            if (lec) {
+                createLog(db, 'DELETE', 'lecture', id, `강의("${lec.title}")가 삭제되었습니다.`, 'system', lec.classId);
+            }
             db.lectures = db.lectures.filter(x => x.id !== id);
             saveDB(db);
         }
@@ -266,6 +334,7 @@ export const apiMock = {
             const db = getDB();
             const newRes = { id: generateId('r'), classId, lectureId, title, description, filename, createdAt: Date.now() };
             db.resources.push(newRes);
+            createLog(db, 'CREATE', 'resource', newRes.id, `새로운 학습 자료("${title}")가 등록되었습니다.`, 'system', classId);
             saveDB(db);
             return newRes;
         },
@@ -275,12 +344,17 @@ export const apiMock = {
             const idx = db.resources.findIndex(r => r.id === id);
             if (idx === -1) throw new Error('자료를 찾을 수 없습니다.');
             db.resources[idx] = { ...db.resources[idx], ...updates };
+            createLog(db, 'UPDATE', 'resource', id, `학습 자료("${db.resources[idx].title}")가 수정되었습니다.`, 'system', db.resources[idx].classId);
             saveDB(db);
             return db.resources[idx];
         },
         delete: async (id) => {
             await delay();
             const db = getDB();
+            const resItem = db.resources.find(r => r.id === id);
+            if (resItem) {
+                createLog(db, 'DELETE', 'resource', id, `학습 자료("${resItem.title}")가 삭제되었습니다.`, 'system', resItem.classId);
+            }
             db.resources = db.resources.filter(x => x.id !== id);
             saveDB(db);
         }
@@ -292,17 +366,53 @@ export const apiMock = {
             await delay();
             return getDB().qnas.filter(q => q.classId === classId);
         },
-        create: async (classId, authorId, title, content) => {
+        create: async (classId, authorId, title, content, isPrivate = false) => {
             await delay();
             const db = getDB();
-            const newQna = { id: generateId('q'), classId, authorId, title, content, createdAt: Date.now() };
+            const newQna = { id: generateId('q'), classId, authorId, title, content, isPrivate, replies: [], createdAt: Date.now() };
             db.qnas.push(newQna);
+            createLog(db, 'CREATE', 'qna', newQna.id, `새로운 질문("${title}")이 등록되었습니다.`, authorId, classId);
             saveDB(db);
             return newQna;
+        },
+        addReply: async (qnaId, authorId, content) => {
+            await delay();
+            const db = getDB();
+            const qnaItem = db.qnas.find(q => q.id === qnaId);
+            if (!qnaItem) throw new Error('QnA 게시글을 찾을 수 없습니다.');
+
+            if (!qnaItem.replies) qnaItem.replies = [];
+            const newReply = {
+                id: generateId('rpl'),
+                authorId,
+                content,
+                createdAt: Date.now()
+            };
+            qnaItem.replies.push(newReply);
+
+            createLog(db, 'CREATE', 'qna_reply', qnaId, `질문("${qnaItem.title}")에 답변이 등록되었습니다.`, authorId, qnaItem.classId);
+            saveDB(db);
+            return qnaItem;
+        },
+        deleteReply: async (qnaId, replyId) => {
+            await delay();
+            const db = getDB();
+            const qnaItem = db.qnas.find(q => q.id === qnaId);
+            if (!qnaItem) throw new Error('QnA 게시글을 찾을 수 없습니다.');
+
+            if (qnaItem.replies) {
+                qnaItem.replies = qnaItem.replies.filter(r => r.id !== replyId);
+            }
+            saveDB(db);
+            return qnaItem;
         },
         delete: async (id) => {
             await delay();
             const db = getDB();
+            const qnaItem = db.qnas.find(q => q.id === id);
+            if (qnaItem) {
+                createLog(db, 'DELETE', 'qna', id, `질문("${qnaItem.title}")이 삭제되었습니다.`, 'system', qnaItem.classId);
+            }
             db.qnas = db.qnas.filter(x => x.id !== id);
             saveDB(db);
         }
@@ -328,6 +438,21 @@ export const apiMock = {
             db.enrollments.push(newEnroll);
             saveDB(db);
             return newEnroll;
+        },
+        joinWithCode: async (code, studentId) => {
+            await delay();
+            const db = getDB();
+            const targetClass = db.classes.find(c => c.enrollmentCode === code);
+            if (!targetClass) {
+                throw new Error('유효하지 않은 참여 코드입니다.');
+            }
+            if (db.enrollments.some(e => e.classId === targetClass.id && e.studentId === studentId)) {
+                throw new Error('이미 수강 중인 클래스입니다.');
+            }
+            const newEnroll = { id: generateId('e'), classId: targetClass.id, studentId, enrolledAt: Date.now() };
+            db.enrollments.push(newEnroll);
+            saveDB(db);
+            return targetClass;
         }
     },
 
@@ -357,6 +482,23 @@ export const apiMock = {
             }
             saveDB(db);
             return true;
+        }
+    },
+
+    // --- 활동 로그 관리 ---
+    logs: {
+        getAll: async () => {
+            await delay();
+            const db = getDB();
+            // 최신순 정렬
+            return (db.logs || []).sort((a, b) => b.timestamp - a.timestamp);
+        },
+        getByEntity: async (entityType, entityId) => {
+            await delay();
+            const db = getDB();
+            return (db.logs || [])
+                .filter(log => log.entityType === entityType && log.entityId === entityId)
+                .sort((a, b) => b.timestamp - a.timestamp);
         }
     }
 };

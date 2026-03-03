@@ -24,6 +24,16 @@ LMS/
 ├── docs/                            # 시스템 및 API 설계 문서 모음
 │   ├── API_설계서.md
 │   ├── 요구사항 정의서.md
+│   ├── QnA_게시판_구현.md
+│   ├── 강의_업로드_및_재생_구현.md
+│   ├── 공통_사이드바_구현.md
+│   ├── 내_정보_관리_구현.md
+│   ├── 인증_및_사용자_관리_구현.md
+│   ├── 클래스_기본관리_CRUDS_구현.md
+│   ├── 클래스_수강신청_및_관리_구현.md
+│   ├── 학습_자료실_구현.md
+│   ├── 학습_진도율_및_통계_구현.md
+│   ├── 활동_내역_로그_구현.md
 │   └── Learning...svg               # 시스템 아키텍처 다이어그램
 └── lms-react/                       # Next.js 애플리케이션 루트
     ├── public/                      # 정적 파일 (favicon 등)
@@ -35,10 +45,16 @@ LMS/
         │   ├── page.js              # 진입 루트 (로그인 / 회원가입)
         │   ├── admin/               # 관리자 기능 라우트
         │   │   ├── page.js          #   유저/클래스 통합 관리
-        │   │   └── class/[classId]/ #   클래스별 대시보드 + 강의 업로드
+        │   │   └── class/[classId]/
+        │   │       ├── page.js      #   클래스별 대시보드 (강의/자료/QnA/수강생)
+        │   │       ├── upload/      #   강의 업로드 페이지
+        │   │       └── student/[studentId]/  # 개별 학생 진도 상세 조회
         │   ├── professor/           # 교수 기능 라우트
         │   │   ├── page.js          #   클래스 목록
-        │   │   └── class/[classId]/ #   클래스별 대시보드 + 강의 업로드
+        │   │   └── class/[classId]/
+        │   │       ├── page.js      #   클래스별 대시보드 (강의/자료/QnA/수강생)
+        │   │       ├── upload/      #   강의 업로드 페이지
+        │   │       └── student/[studentId]/  # 개별 학생 진도 상세 조회
         │   ├── student/             # 학생 기능 라우트
         │   │   ├── page.js          #   수강 신청 및 학습 공간
         │   │   └── class/[classId]/ #   클래스별 강의 시청/자료/QnA
@@ -47,22 +63,26 @@ LMS/
         │
         ├── components/              # 재사용 가능한 UI 컴포넌트
         │   ├── layout/              # 공통 레이아웃 골격
-        │   │   ├── Header.jsx       #   네비게이션 바
+        │   │   ├── Header.jsx       #   네비게이션 바 (뒤로가기 포함)
         │   │   └── Footer.jsx       #   하단 푸터
         │   └── ui/                  # 공용 UI 컴포넌트
-        │       ├── LoadingSpinner.jsx  # 전역 로딩 스피너
-        │       ├── Modal.jsx           # 전역 커스텀 오버레이 모달 창
-        │       ├── StatusBadge.jsx     # 수강 상태 뱃지 (완료/진행중/미수강)
-        │       ├── TabBar.jsx          # 탭 전환 바
-        │       ├── EmptyState.jsx      # 빈 목록 안내 메시지
-        │       ├── LectureList.jsx     # 강의 목록 (admin/professor 공용)
-        │       ├── ResourceList.jsx    # 자료 목록 (전 역할 공용)
-        │       ├── ResourceForm.jsx    # 자료 등록 폼 (admin/professor 공용)
-        │       ├── QnaList.jsx         # QnA 목록 (admin/professor 공용)
-        │       └── EnrollmentList.jsx  # 수강생 현황 (admin/professor 공용)
+        │       ├── LoadingSpinner.jsx   # 전역 로딩 스피너
+        │       ├── Modal.jsx            # 전역 커스텀 오버레이 모달 창
+        │       ├── StatusBadge.jsx      # 수강 상태 뱃지 (완료/진행중/미수강)
+        │       ├── TabBar.jsx           # 탭 전환 바
+        │       ├── EmptyState.jsx       # 빈 목록 안내 메시지
+        │       ├── Sidebar.jsx          # 역할별 공통 사이드바 네비게이션
+        │       ├── LectureList.jsx      # 강의 목록 (admin/professor 공용)
+        │       ├── ResourceList.jsx     # 자료 목록 (전 역할 공용)
+        │       ├── ResourceForm.jsx     # 자료 등록 폼 (admin/professor 공용)
+        │       ├── QnaList.jsx          # QnA 게시판 (목록/상세/글쓰기 3모드)
+        │       ├── EnrollmentList.jsx   # 수강생 현황 (admin/professor 공용)
+        │       ├── UploadForm.jsx       # 강의 업로드 폼 (YouTube 링크 등록)
+        │       ├── StudentDetail.jsx    # 개별 학생 진도 상세 뷰
+        │       └── ActivityLogModal.jsx # 활동 내역 로그 모달
         │
         ├── context/                 # React Context (전역 상태)
-        │   ├── AuthContext.jsx      #   인증 상태 관리
+        │   ├── AuthContext.jsx      #   인증 상태 관리 (updateUser 포함)
         │   ├── ToastContext.jsx     #   토스트 알림 관리
         │   └── ConfirmContext.jsx   #   확인 모달 관리
         │
@@ -85,25 +105,25 @@ LMS/
 
 | 역할 | 주요 기능 |
 |------|-----------|
-| **관리자** | 전체 유저 조회·추가·수정(비밀번호 포함)·삭제, 전체 클래스 조회·생성(교수자 지정)·수정·삭제, 클래스 내 강의/자료/QnA 관리 |
-| **교수자** | 클래스 생성·삭제, 강의 업로드(유튜브)·수정·삭제, 자료 등록·삭제, QnA 관리, 학생별 수강률 실시간 조회 |
-| **학습자** | 클래스 탐색·수강 신청, 강의 시청(진도 자동 추적, 건너뛰기 방지, 이어보기), 자료 다운로드, QnA 작성·삭제 |
+| **관리자** | 전체 유저 조회·추가·수정(비밀번호 포함)·삭제, 전체 클래스 조회·생성(교수자 지정/자동 코드발급)·수정·삭제, 지정/수동 수강생 강제 등록, 클래스 내 강의/자료/QnA 관리, 활동 로그 조회 |
+| **교수자** | 클래스 생성·삭제, 지정/수동 수강생 강제 등록, 강의 업로드(유튜브)·수정·삭제, 자료 등록·삭제, QnA 답변 관리, 학생별 수강률 실시간 조회 |
+| **학습자** | 무제한 클래스 탐색·참여 코드를 통한 수강 신청 모달, 강의 시청(진도 자동 추적, 건너뛰기 방지, 이어보기), 자료 다운로드, QnA 작성·삭제(공개/비공개 선택) |
 
 ### 핵심 아키텍처
 
 1. **상태 관리 (`context/` + `hooks/`)**
    - **Context-Hook 쌍 패턴**: 각 Context마다 대응하는 Custom Hook을 제공하여 사용 편의성 확보
-   - `useAuth`: 역할 기반 접근 제어 + `localStorage` 기반 로그인 상태 유지
+   - `useAuth`: 역할 기반 접근 제어 + `localStorage` 기반 로그인 상태 유지 + `updateUser`로 즉시 반영
    - `useToast` / `useConfirm`: 전역 UI 피드백 (토스트 알림, 확인 모달)
 
 2. **API 추상화 (`lib/api/`)**
    - **Mock ↔ Server 전환 구조**: `api.js`를 Proxy 진입점으로 두고 `api_mock.js` / `api_server.js`를 상호 전환
    - **글로벌 로딩 인터셉터**: 모든 API 호출 전후에 로딩 스피너를 자동 제어
    - `{ skipLoading: true }`: 백그라운드 진도율 트래킹 등 성능 민감 호출의 로딩 UI 스킵
-   - **33종 REST 엔드포인트**: Promise 기반 1:1 대응 규격으로 백엔드 전환 시 무중단 교체 가능
+   - **35종 REST 엔드포인트**: Promise 기반 1:1 대응 규격으로 백엔드 전환 시 무중단 교체 가능
 
 3. **공용 컴포넌트 (`components/ui/`)**
-   - 역할별 페이지에서 반복되는 UI 요소를 9개의 공용 컴포넌트로 추출
+   - 역할별 페이지에서 반복되는 UI 요소를 14개의 공용 컴포넌트로 추출
    - Props 기반 설계로 역할 간 차이를 유연하게 처리 (예: `onDelete` / `onDownload`)
 
 4. **영상 제어 시스템 (`/app/lecture/`)**
@@ -115,13 +135,14 @@ LMS/
 
 | 컬렉션 | 주요 필드 |
 |--------|-----------|
-| `users` | id, username, password, name, role, createdAt |
-| `classes` | id, title, description, profId, createdAt |
+| `users` | id, username, password, name, role, createdAt, updatedAt |
+| `classes` | id, title, description, profId, **enrollmentCode**(초대 코드), createdAt |
 | `lectures` | id, classId, title, description, youtubeLink, createdAt |
 | `resources` | id, classId, title, description, filename, createdAt |
-| `qnas` | id, classId, authorId, title, content, createdAt |
+| `qnas` | id, classId, authorId, title, content, isPrivate, replies[], createdAt |
 | `enrollments` | id, studentId, classId, enrolledAt |
 | `lecture_views` | id, studentId, lectureId, classId, progressRate, lastPosition, viewedAt |
+| `logs` | id, action, entityType, entityId, message, actorId, classId, timestamp |
 
 ## 설치 및 실행
 

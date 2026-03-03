@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { api } from '@/lib/api/api';
 import Link from 'next/link';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 export default function LectureStatsPage() {
     return (
@@ -77,18 +78,15 @@ function LectureStats() {
         }
     };
 
-    const renderBadge = (rate) => {
-        if (rate >= 95) return <span className="badge badge-complete">수강 완료</span>;
-        if (rate > 0) return <span className="badge badge-progress">수강 중</span>;
-        return <span className="badge badge-none">미수강</span>;
-    };
 
     if (!user || (!lecture && !loadingError)) return null;
 
     return (
         <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                <button className="btn btn-back" onClick={() => router.back()}>&larr; 돌아가기</button>
+            <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                    <button className="btn btn-back" onClick={() => router.back()}>&larr; 돌아가기</button>
+                </div>
                 <h2 style={{ margin: 0 }}>[{lecture?.title || '강의'}] 수강률 통계</h2>
             </div>
 
@@ -130,7 +128,7 @@ function LectureStats() {
                                                     <span style={{ fontSize: '0.85rem', fontWeight: 600, minWidth: '35px' }}>{s.rate}%</span>
                                                 </div>
                                             </td>
-                                            <td>{renderBadge(s.rate)}</td>
+                                            <td><StatusBadge rate={s.rate} /></td>
                                         </tr>
                                     ))
                                 )}

@@ -82,9 +82,14 @@ export const apiReal = {
          */
         getById: async (id) => request('GET', `/api/users/${id}`),
         update: async (id, updates) => request('PATCH', `/api/users/${id}`, updates),
-        updatePassword: async (id, password) => request('PATCH', `/api/users/${id}/password`, { password }),
+        updatePassword: async (id, currentPassword, newPassword) => request('PATCH', `/api/users/${id}/password`, { currentPassword, password: newPassword }),
         updateRole: async (id, role) => request('PATCH', `/api/users/${id}/role`, { role }),
-        delete: async (id) => request('DELETE', `/api/users/${id}`)
+        delete: async (id) => request('DELETE', `/api/users/${id}`),
+        /**
+         * 수동 수강생 추가를 위한 이름/아이디 기반 회원 검색
+         * @param {string} query 검색어
+         */
+        search: async (query) => request('GET', `/api/users/search?q=${encodeURIComponent(query)}`)
     },
 
     // --- 클래스(과목) 관리 ---
@@ -134,7 +139,9 @@ export const apiReal = {
     // --- QnA 게시판 관리 ---
     qnas: {
         getByClass: async (classId) => request('GET', `/api/classes/${classId}/qnas`),
-        create: async (classId, authorId, title, content) => request('POST', '/api/qnas', { classId, authorId, title, content }),
+        create: async (classId, authorId, title, content, isPrivate = false) => request('POST', '/api/qnas', { classId, authorId, title, content, isPrivate }),
+        addReply: async (qnaId, authorId, content) => request('POST', `/api/qnas/${qnaId}/replies`, { authorId, content }),
+        deleteReply: async (qnaId, replyId) => request('DELETE', `/api/qnas/${qnaId}/replies/${replyId}`),
         delete: async (id) => request('DELETE', `/api/qnas/${id}`)
     },
 
@@ -142,7 +149,11 @@ export const apiReal = {
     enrollments: {
         getByClass: async (classId) => request('GET', `/api/classes/${classId}/enrollments`),
         getByStudent: async (studentId) => request('GET', `/api/students/${studentId}/enrollments`),
-        create: async (classId, studentId) => request('POST', '/api/enrollments', { classId, studentId })
+        create: async (classId, studentId) => request('POST', '/api/enrollments', { classId, studentId }),
+        /**
+         * 학생이 발급받은 참여 코드로 수강 신청
+         */
+        joinWithCode: async (code, studentId) => request('POST', '/api/enrollments/join', { code, studentId })
     },
 
     // --- 강의 진도율 및 시청 정보 추적 ---
@@ -151,5 +162,12 @@ export const apiReal = {
         getByClassAndStudent: async (classId, studentId) => request('GET', `/api/classes/${classId}/students/${studentId}/views`),
         updateProgress: async (classId, lectureId, studentId, progressRate, lastPosition) =>
             request('POST', '/api/views/progress', { classId, lectureId, studentId, progressRate, lastPosition })
+    },
+
+    // --- 활동 로그 관리 ---
+    logs: {
+        getAll: async () => request('GET', '/api/logs'),
+        getByEntity: async (entityType, entityId) => request('GET', `/api/logs/${entityType}/${entityId}`),
+        create: async (action, entityType, entityId, message, actorId, classId = null) => request('POST', '/api/logs', { action, entityType, entityId, message, actorId, classId })
     }
 };

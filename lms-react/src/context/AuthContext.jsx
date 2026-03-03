@@ -65,8 +65,15 @@ export function AuthProvider({ children }) {
         return true;
     };
 
+    // 사용자 정보 업데이트 (정보 수정 후 컨텍스트 및 로컬스토리지 반영)
+    const updateUser = (updates) => {
+        const updatedUser = { ...user, ...updates };
+        setUser(updatedUser);
+        localStorage.setItem('lms_current_user', JSON.stringify(updatedUser));
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, requireAuth }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, requireAuth, updateUser }}>
             {children}
         </AuthContext.Provider>
     );

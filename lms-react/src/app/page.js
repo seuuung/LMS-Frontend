@@ -77,7 +77,7 @@ export default function Home() {
   if (user) return null; // Prevent flicker during redirect
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', padding: '2rem 2rem' }}>
       <div className="auth-container">
         <style jsx>{`
           .auth-container {

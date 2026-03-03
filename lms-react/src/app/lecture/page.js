@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/useToast';
 import { useConfirm } from '@/hooks/useConfirm';
 import { api } from '@/lib/api/api';
 import { extractVideoId } from '@/lib/utils';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 export default function LectureViewPage() {
     return (
@@ -45,7 +46,8 @@ function LectureView() {
 
     // Player & Progress State
     const playerRef = useRef(null);
-    const [badgeEl, setBadgeEl] = useState(null);
+    const [progressRate, setProgressRate] = useState(0);
+    const [statsInfo, setStatsInfo] = useState(null); // 교수자용 통계 정보
 
     const currentRateRef = useRef(0);
     const maxAllowedTimeRef = useRef(0);
@@ -78,8 +80,9 @@ function LectureView() {
             if (user.role === 'student') {
                 const views = await api.lectureViews.getByClassAndStudent(classId, user.id);
                 const viewInfo = views.find(v => v.lectureId === lectureId);
-                currentRateRef.current = viewInfo ? (viewInfo.progressRate || 0) : 0;
-                updateBadge(currentRateRef.current);
+                const rate = viewInfo ? (viewInfo.progressRate || 0) : 0;
+                currentRateRef.current = rate;
+                setProgressRate(rate);
             } else {
                 // Prof/Admin stats summary
                 const [enrollments, allViews] = await Promise.all([
@@ -90,7 +93,7 @@ function LectureView() {
                 const completedCount = allViews.filter(v =>
                     String(v.lectureId) === String(lectureId) && v.progressRate >= 95
                 ).length;
-                setBadgeEl(<span className="badge badge-complete" style={{ whiteSpace: 'nowrap' }}>수강 완료 {completedCount}명 / 전체 {totalStudents}명</span>);
+                setStatsInfo({ completedCount, totalStudents });
             }
         } catch (err) {
             showToast(err.message, 'error');
@@ -104,12 +107,6 @@ function LectureView() {
             (targetLec && r.title === `[${targetLec.title}] 첨부자료`)
         );
         setResources(lectureRes);
-    };
-
-    const updateBadge = (rate) => {
-        if (rate >= 95) setBadgeEl(<span className="badge badge-complete">수강 완료 (100%)</span>);
-        else if (rate > 0) setBadgeEl(<span className="badge badge-progress">수강 중 ({rate}%)</span>);
-        else setBadgeEl(<span className="badge badge-none">미수강 (0%)</span>);
     };
 
     useEffect(() => {
@@ -185,7 +182,9 @@ function LectureView() {
          */
         const checkAndEnforcePosition = (player) => {
             if (user?.role !== 'student') return;
-            if (currentRateRef.current >= 95) return;
+
+            // 95% 이상이면 수강 완료로 간주하여 건너뛰기 제한 해제
+            const isCompleted = currentRateRef.current >= 95;
 
             try {
                 const state = player.getPlayerState();
@@ -194,7 +193,8 @@ function LectureView() {
                 const currentTime = player.getCurrentTime();
                 const tolerance = 3;
 
-                if (currentTime > maxAllowedTimeRef.current + tolerance) {
+                // 완료되지 않은 경우에만 건너뛰기 강제 방지
+                if (!isCompleted && currentTime > maxAllowedTimeRef.current + tolerance) {
                     player.pauseVideo();
                     player.seekTo(maxAllowedTimeRef.current, true);
                     setTimeout(() => { player.playVideo(); }, 300);
@@ -233,7 +233,7 @@ function LectureView() {
                     currentRateRef.current = percent;
 
                     await api.lectureViews.updateProgress(classId, lectureId, user.id, percent, currentTime, { skipLoading: true });
-                    updateBadge(percent);
+                    setProgressRate(percent);
                 }
             } catch (e) {
                 // ignore silently to prevent spam
@@ -338,6 +338,14 @@ function LectureView() {
                             )}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                            {user.role === 'student' ? (
+                                <StatusBadge rate={progressRate} />
+                            ) : statsInfo ? (
+                                <span className="badge badge-complete" style={{ whiteSpace: 'nowrap' }}>
+                                    수강 완료 {statsInfo.completedCount}명 / 전체 {statsInfo.totalStudents}명
+                                </span>
+                            ) : null}
+
                             {isInstructorMode && !isEditing && (
                                 <button className="btn" style={{ background: '#f8fafc', border: '1px solid #cbd5e1', fontSize: '0.85rem', padding: '0.3rem 0.6rem' }} onClick={handleEditInit}>수정하기</button>
                             )}

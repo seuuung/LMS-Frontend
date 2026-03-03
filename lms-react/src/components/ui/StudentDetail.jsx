@@ -83,14 +83,14 @@ export default function StudentDetail({ classId, studentId, backPath, allowedRol
             <div className="content">
                 <section className="card">
                     {/* 헤더 */}
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '2rem' }}>
-                        <button className="btn btn-back" style={{ whiteSpace: 'nowrap' }} onClick={() => router.back()}>&larr; 돌아가기</button>
-                        <div>
-                            <h2 style={{ margin: 0 }}>{student.name} - 수강 진도 상세</h2>
-                            <p style={{ margin: '0.3rem 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                                클래스: {currentClass.title}
-                            </p>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                            <button className="btn btn-back" style={{ whiteSpace: 'nowrap' }} onClick={() => router.back()}>&larr; 돌아가기</button>
                         </div>
+                        <h2 style={{ margin: 0 }}>{student.name} - 수강 진도 상세</h2>
+                        <p style={{ margin: '0.3rem 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                            클래스: {currentClass.title}
+                        </p>
                     </div>
 
                     {/* 요약 카드 */}

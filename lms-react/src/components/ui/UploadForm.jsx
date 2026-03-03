@@ -95,76 +95,69 @@ export default function UploadForm({ classId, allowedRoles, basePath }) {
 
     if (!user || !currentClass) return null;
 
-    // 역할별 사이드바 메뉴 구성
+    // 역할별 경로 (더 이상 사이드바 메뉴 렌더링은 불필요하지만 basePath는 계속 사용)
     const isAdmin = basePath === '/admin';
-    const menuTitle = isAdmin ? 'Admin Menu' : 'Professor Menu';
 
     return (
-        <div className="dashboard-grid">
+        <div className="container lecture-layout" style={{ marginTop: '2rem' }}>
+            {/* 영상 및 폼 영역 (Main) */}
+            <section className="main-lecture">
+
+                <div className="video-wrapper" style={{ background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {previewId ? (
+                        <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${previewId}`} frameBorder="0" allowFullScreen></iframe>
+                    ) : (
+                        <span style={{ color: '#94a3b8', fontSize: '1rem' }}>유튜브 링크를 입력 후 미리보기를 적용하세요.</span>
+                    )}
+                </div>
+
+                <div className="lecture-info-panel" style={{ marginTop: '1.5rem', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '1.5rem', background: '#fff' }}>
+                    <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>새 강의 업로드 (유튜브 연동)</h2>
+
+                    <div className="form-group mb-4">
+                        <label className="form-label">유튜브 링크</label>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <input type="text" className="form-control" placeholder="https://youtu.be/..." value={lecLink} onChange={e => setLecLink(e.target.value)} />
+                            <button className="btn btn-primary" style={{ whiteSpace: 'nowrap' }} onClick={handlePreview}>미리보기 적용</button>
+                        </div>
+                    </div>
+
+                    <div className="form-group mb-4">
+                        <label className="form-label">강의 제목</label>
+                        <input type="text" className="form-control" placeholder="예: [1주차] LMS 시스템 아키텍처" value={lecTitle} onChange={e => setLecTitle(e.target.value)} />
+                    </div>
+
+                    <div className="form-group mb-4">
+                        <label className="form-label">강의 설명 (선택)</label>
+                        <textarea className="form-control" placeholder="이 강의에서 다룰 내용을 간략히 적어주세요." style={{ minHeight: '120px' }} value={lecDesc} onChange={e => setLecDesc(e.target.value)}></textarea>
+                    </div>
+                </div>
+            </section>
+
+            {/* 자료 첨부 및 등록 영역 (Sidebar) */}
             <aside className="sidebar">
-                <h3 style={{ padding: '0 1rem', marginBottom: '1rem' }}>{menuTitle}</h3>
-                {isAdmin ? (
-                    <>
-                        <Link href="/admin?t=users" className="nav-item">사용자 관리</Link>
-                        <Link href="/admin?t=classes" className="nav-item active">전체 클래스 관리</Link>
-                    </>
-                ) : (
-                    <div className="nav-item active">강의 업로드</div>
-                )}
+                <div className="side-card" style={{ marginBottom: '1.5rem' }}>
+                    <h4 style={{ marginBottom: '1rem', borderBottom: '2px solid #e2e8f0', paddingBottom: '0.5rem' }}>자료 파일 첨부 (선택)</h4>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                        강의 시청 중 학생들이 다운로드할 수 있는 참고 자료를 첨부합니다.
+                    </p>
+                    <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+                        <input type="file" id="resFile" className="form-control" style={{ border: 'none', background: 'transparent', padding: 0 }} onChange={e => setResFile(e.target.files[0])} />
+                        <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem' }}>
+                            {resFile ? `선택됨: ${resFile.name}` : '선택된 파일 없음'}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="side-card">
+                    <button className="btn btn-primary" style={{ width: '100%', fontSize: '1.05rem', padding: '1rem' }} onClick={handleCreateLecture}>
+                        강의 최종 등록
+                    </button>
+                    <p style={{ marginTop: '0.8rem', fontSize: '0.8rem', color: '#94a3b8', textAlign: 'center' }}>
+                        등록된 강의는 학생들에게 즉시 공개됩니다.
+                    </p>
+                </div>
             </aside>
-
-            <div className="content">
-                <section className="card">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-                        <Link href={`${basePath}/class/${classId}`} className="btn btn-back">&larr; 강의 목록으로</Link>
-                        <h2 style={{ margin: 0 }}>새 강의 업로드 (유튜브 연동)</h2>
-                    </div>
-                    <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>유튜브 링크를 입력하여 새로운 강의를 클래스에 추가하세요.</p>
-
-                    <div className="lecture-layout">
-                        {/* 좌측: 폼 입력 영역 */}
-                        <div>
-                            <div className="form-group mb-4">
-                                <label className="form-label">강의 제목</label>
-                                <input type="text" className="form-control" placeholder="예: [1주차] LMS 시스템 아키텍처" value={lecTitle} onChange={e => setLecTitle(e.target.value)} />
-                            </div>
-                            <div className="form-group mb-4">
-                                <label className="form-label">강의 설명 (선택)</label>
-                                <textarea className="form-control" placeholder="이 강의에서 다룰 내용을 간략히 적어주세요." style={{ minHeight: '100px' }} value={lecDesc} onChange={e => setLecDesc(e.target.value)}></textarea>
-                            </div>
-                            <div className="form-group mb-4">
-                                <label className="form-label">유튜브 링크</label>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                    <input type="text" className="form-control" placeholder="https://youtu.be/..." value={lecLink} onChange={e => setLecLink(e.target.value)} />
-                                    <button className="btn btn-primary" style={{ whiteSpace: 'nowrap' }} onClick={handlePreview}>미리보기 적용</button>
-                                </div>
-                            </div>
-
-                            <div className="form-group mb-4 p-4" style={{ background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
-                                <label className="form-label mb-2" style={{ display: 'block' }}>자료 파일 첨부 (선택)</label>
-                                <input type="file" id="resFile" className="form-control" style={{ border: 'none', background: 'transparent', padding: 0 }} onChange={e => setResFile(e.target.files[0])} />
-                                <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem' }}>
-                                    {resFile ? `첨부됨: ${resFile.name}` : ''}
-                                </div>
-                            </div>
-
-                            <button className="btn btn-primary" style={{ width: '100%', fontSize: '1.05rem', padding: '0.8rem' }} onClick={handleCreateLecture}>강의 최종 등록</button>
-                        </div>
-
-                        {/* 우측: 영상 미리보기 */}
-                        <div className="side-card">
-                            <h4 style={{ marginBottom: '1rem', color: 'var(--text-main)' }}>영상 미리보기</h4>
-                            <div style={{ width: '100%', aspectRatio: '16/9', background: '#000', borderRadius: '8px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                {previewId ? (
-                                    <iframe width="100%" height="100%" src={`https://www.youtube.com/embed/${previewId}`} frameBorder="0" allowFullScreen></iframe>
-                                ) : (
-                                    <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>링크를 입력하면 미리보기가 표시됩니다.</span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </div>
         </div>
     );
 }

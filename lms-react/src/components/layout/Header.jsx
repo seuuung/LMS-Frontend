@@ -15,7 +15,7 @@ export default function Header() {
     const pathname = usePathname();
     const router = useRouter();
 
-    const isLecturePage = pathname === '/lecture' || pathname === '/lecture_stats';
+    const isLecturePage = pathname === '/lecture' || pathname === '/lecture_stats' || pathname.includes('/upload');
 
     const getHomeLink = () => {
         if (!user) return '/';
