@@ -1,0 +1,476 @@
+'use client';
+
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
+import { useConfirm } from '@/hooks/useConfirm';
+import { api } from '@/lib/api/api';
+import Modal from '@/components/ui/Modal'; // Modal 컴포넌트 임포트
+
+export default function AdminDashboardPage() {
+    return (
+        <Suspense fallback={<div style={{ padding: '2rem' }}>Loading Admin...</div>}>
+            <AdminDashboard />
+        </Suspense>
+    );
+}
+
+/**
+ * 관리자 대시보드 컴포넌트
+ * 이 컴포넌트는 크게 '사용자 관리'와 '전체 클래스 관리' 2가지 탭 뷰로 나뉩니다.
+ * api_mock.js(또는 api_server.js)를 통해 전체 데이터를 요청하고 인라인 생성, 수정, 삭제 기능을 제공합니다.
+ * @returns {JSX.Element|null}
+ */
+function AdminDashboard() {
+    const { requireAuth, user } = useAuth();
+    const { showToast } = useToast();
+    const { confirm } = useConfirm();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+
+    const [activeTab, setActiveTab] = useState('users');
+    const [allUsers, setAllUsers] = useState([]);
+    const [allClasses, setAllClasses] = useState([]);
+    const [classSearch, setClassSearch] = useState('');
+
+    // --- Create User Modal State ---
+    const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+    const [newUserForm, setNewUserForm] = useState({ username: '', name: '', password: '', role: 'student' });
+
+    // --- Edit User Modal State ---
+    const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+    const [editUserForm, setEditUserForm] = useState({ id: null, name: '', password: '', role: 'student' });
+
+    // --- Edit Class Modal State ---
+    const [isEditClassModalOpen, setIsEditClassModalOpen] = useState(false);
+    const [editClassForm, setEditClassForm] = useState({ id: null, title: '', description: '' });
+
+    // Create class state
+    const [isCreatingClass, setIsCreatingClass] = useState(false);
+    const [newClassTitle, setNewClassTitle] = useState('');
+    const [newClassDesc, setNewClassDesc] = useState('');
+    const [newClassProfId, setNewClassProfId] = useState('');
+
+    // --- 데이터 초기화 및 패칭 ---
+    useEffect(() => {
+        if (!requireAuth(['admin'])) return;
+
+        const tab = searchParams.get('t');
+        if (tab === 'classes') {
+            setActiveTab('classes');
+        }
+        loadData();
+    }, [user, searchParams]);
+
+    /**
+     * 컴포넌트 데이터 불어오기 (병렬 요청 처리)
+     * 유저 목록과 전체 클래스 목록을 동시에 요청하여 상태에 반영합니다.
+     */
+    const loadData = async () => {
+        try {
+            const [users, classes] = await Promise.all([
+                api.users.getAll(),
+                api.classes.getAll()
+            ]);
+            setAllUsers(users);
+            setAllClasses(classes);
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    };
+
+    // --- User Management ---
+    const handleAddUser = async (e) => {
+        e.preventDefault();
+        const { username, name, password, role } = newUserForm;
+
+        if (!username || !name || !password) {
+            return showToast('모든 필드를 입력해주세요.', 'error');
+        }
+
+        try {
+            await api.auth.register({ username, password, name, role });
+            showToast('유저가 추가되었습니다.', 'success');
+            setIsUserModalOpen(false);
+            setNewUserForm({ username: '', name: '', password: '', role: 'student' });
+            loadData();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    };
+
+    const handleDeleteUser = async (id) => {
+        if (!await confirm('정말 삭제하시겠습니까?')) return;
+        try {
+            await api.users.delete(id);
+            showToast('삭제되었습니다.', 'success');
+            loadData();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    };
+
+    const handleSaveUser = async (e) => {
+        e.preventDefault();
+        const { id, name, password, role } = editUserForm;
+        if (!name.trim()) return showToast('이름을 입력하세요.', 'error');
+
+        try {
+            await api.users.update(id, { name: name.trim() });
+
+            // 비밀번호 변경이 있는 경우
+            if (password && password.trim() !== '') {
+                await api.users.updatePassword(id, password.trim());
+            }
+
+            // 권한 변경이 함께 일어난 경우
+            const currentUser = allUsers.find(u => u.id === id);
+            if (currentUser && currentUser.role !== role) {
+                await api.users.updateRole(id, role);
+            }
+            showToast('유저 정보가 수정되었습니다.', 'success');
+            setIsEditUserModalOpen(false);
+            loadData();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    };
+
+    // --- Class Management ---
+    const handleDeleteClass = async (id) => {
+        if (!await confirm('클래스를 삭제할까요? 하위 데이터도 모두 삭제됩니다.')) return;
+        try {
+            await api.classes.delete(id);
+            showToast('삭제되었습니다.', 'success');
+            loadData();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    };
+
+    const handleSaveClass = async (e) => {
+        e.preventDefault();
+        const { id, title, description } = editClassForm;
+        if (!title.trim()) return showToast('클래스 제목을 입력하세요.', 'error');
+
+        try {
+            await api.classes.update(id, { title: title.trim(), description: description.trim() });
+            showToast('클래스 정보가 수정되었습니다.', 'success');
+            setIsEditClassModalOpen(false);
+            loadData();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    };
+
+    const handleCreateClass = async () => {
+        if (!newClassTitle.trim()) return showToast('클래스 제목을 입력하세요.', 'error');
+        if (!newClassProfId) return showToast('담당 교수자를 선택하세요.', 'error');
+
+        try {
+            await api.classes.create(newClassTitle.trim(), newClassDesc.trim(), newClassProfId);
+            showToast('클래스가 생성되었습니다.', 'success');
+            setIsCreatingClass(false);
+            setNewClassTitle('');
+            setNewClassDesc('');
+            setNewClassProfId('');
+            loadData();
+        } catch (err) {
+            showToast(err.message, 'error');
+        }
+    };
+
+    const filteredClasses = allClasses.filter(c =>
+        c.title.toLowerCase().includes(classSearch.toLowerCase())
+    );
+
+    const profUsers = allUsers.filter(u => u.role === 'prof');
+
+    if (!user || user.role !== 'admin') return null;
+
+    return (
+        <div className="dashboard-grid">
+            <aside className="sidebar">
+                <h3 style={{ padding: '0 1rem', marginBottom: '1rem' }}>Admin Menu</h3>
+                <div className={`nav-item ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>사용자 관리</div>
+                <div className={`nav-item ${activeTab === 'classes' ? 'active' : ''}`} onClick={() => setActiveTab('classes')}>전체 클래스 관리</div>
+            </aside>
+
+            <div className="content">
+                {activeTab === 'users' && (
+                    <section className="card">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h2>사용자 통합 관리</h2>
+                            <button className="btn btn-primary" onClick={() => setIsUserModalOpen(true)}>+ 유저 추가</button>
+                        </div>
+
+                        <div className="table-responsive" style={{ marginTop: '1.5rem' }}>
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>아이디</th>
+                                        <th>이름</th>
+                                        <th>권한(역할)</th>
+                                        <th>관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {allUsers.map(u => (
+                                        <tr key={u.id}>
+                                            <td>{u.username}</td>
+                                            <td>{u.name}</td>
+                                            <td>
+                                                {u.role === 'admin' && '관리자'}
+                                                {u.role === 'prof' && '교수자'}
+                                                {u.role === 'student' && '학습자'}
+                                                {!(u.role === 'admin' || u.role === 'prof' || u.role === 'student') && u.role}
+                                            </td>
+                                            <td>
+                                                <button className="action-btn" onClick={() => {
+                                                    setEditUserForm({ id: u.id, name: u.name, password: '', role: u.role });
+                                                    setIsEditUserModalOpen(true);
+                                                }}>수정</button>
+                                                <button className="action-btn del" onClick={() => handleDeleteUser(u.id)}>삭제</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {allUsers.length === 0 && (
+                                        <tr>
+                                            <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>사용자가 없습니다.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                )}
+
+                {activeTab === 'classes' && (
+                    <section className="card">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h2>전체 클래스 관리</h2>
+                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="클래스명 검색..."
+                                    value={classSearch}
+                                    onChange={(e) => setClassSearch(e.target.value)}
+                                />
+                                <button className="btn btn-primary" style={{ whiteSpace: 'nowrap' }} onClick={() => setIsCreatingClass(!isCreatingClass)}>+ 새 클래스 개설</button>
+                            </div>
+                        </div>
+
+
+
+                        <div className="table-responsive" style={{ marginTop: '1.5rem' }}>
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>클래스명</th>
+                                        <th>담당 교수</th>
+                                        <th>생성일</th>
+                                        <th style={{ textAlign: 'center' }}>관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredClasses.map(c => {
+                                        const prof = allUsers.find(u => u.id === c.profId);
+                                        return (
+                                            <tr key={c.id}>
+                                                <td>{c.title}</td>
+                                                <td>{prof ? prof.name : c.profId}</td>
+                                                <td>{new Date(c.createdAt).toLocaleDateString()}</td>
+                                                <td>
+                                                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                                                        <button className="action-btn" onClick={() => {
+                                                            setEditClassForm({ id: c.id, title: c.title, description: c.description || '' });
+                                                            setIsEditClassModalOpen(true);
+                                                        }}>수정</button>
+                                                        <button className="action-btn" style={{ color: 'var(--primary-color)' }} onClick={() => router.push(`/admin/class/${c.id}`)}>관리</button>
+                                                        <button className="action-btn del" onClick={() => handleDeleteClass(c.id)}>삭제</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )
+                                    })}
+                                    {filteredClasses.length === 0 && (
+                                        <tr>
+                                            <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>클래스가 없습니다.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                )}
+            </div>
+
+            {/* 유저 추가용 Modal */}
+            <Modal isOpen={isUserModalOpen} onClose={() => setIsUserModalOpen(false)} title="신규 사용자 추가">
+                <form onSubmit={handleAddUser} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div className="form-group">
+                        <label className="form-label">아이디</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={newUserForm.username}
+                            onChange={(e) => setNewUserForm({ ...newUserForm, username: e.target.value })}
+                            placeholder="아이디를 입력하세요"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">이름</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={newUserForm.name}
+                            onChange={(e) => setNewUserForm({ ...newUserForm, name: e.target.value })}
+                            placeholder="실명을 입력하세요"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">비밀번호</label>
+                        <input
+                            type="password"
+                            className="form-control"
+                            value={newUserForm.password}
+                            onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                            placeholder="초기 가입 비밀번호"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">권한(역할)</label>
+                        <select
+                            className="form-control"
+                            value={newUserForm.role}
+                            onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })}
+                        >
+                            <option value="student">학습자</option>
+                            <option value="prof">교수자</option>
+                            <option value="admin">관리자</option>
+                        </select>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                        <button type="button" className="btn btn-cancel" onClick={() => setIsUserModalOpen(false)}>취소</button>
+                        <button type="submit" className="btn btn-primary">등록하기</button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* 유저 수정용 Modal */}
+            <Modal isOpen={isEditUserModalOpen} onClose={() => setIsEditUserModalOpen(false)} title="사용자 정보 수정">
+                <form onSubmit={handleSaveUser} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div className="form-group">
+                        <label className="form-label">이름</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={editUserForm.name}
+                            onChange={(e) => setEditUserForm({ ...editUserForm, name: e.target.value })}
+                            placeholder="실명을 입력하세요"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">비밀번호</label>
+                        <input
+                            type="password"
+                            className="form-control"
+                            value={editUserForm.password}
+                            onChange={(e) => setEditUserForm({ ...editUserForm, password: e.target.value })}
+                            placeholder="변경할 비밀번호 (빈칸이면 유지)"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">권한(역할)</label>
+                        <select
+                            className="form-control"
+                            value={editUserForm.role}
+                            onChange={(e) => setEditUserForm({ ...editUserForm, role: e.target.value })}
+                        >
+                            <option value="student">학습자</option>
+                            <option value="prof">교수자</option>
+                            <option value="admin">관리자</option>
+                        </select>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                        <button type="button" className="btn btn-cancel" onClick={() => setIsEditUserModalOpen(false)}>취소</button>
+                        <button type="submit" className="btn btn-primary">수정 완료</button>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* 클래스 수정용 Modal */}
+            <Modal isOpen={isEditClassModalOpen} onClose={() => setIsEditClassModalOpen(false)} title="클래스 이름 수정">
+                <form onSubmit={handleSaveClass} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div className="form-group">
+                        <label className="form-label">클래스명</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={editClassForm.title}
+                            onChange={(e) => setEditClassForm({ ...editClassForm, title: e.target.value })}
+                            placeholder="변경할 클래스명 입력"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">클래스 설명</label>
+                        <textarea
+                            className="form-control"
+                            value={editClassForm.description}
+                            onChange={(e) => setEditClassForm({ ...editClassForm, description: e.target.value })}
+                            placeholder="변경할 클래스 설명 (선택)"
+                            style={{ minHeight: '100px' }}
+                        ></textarea>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                        <button type="button" className="btn btn-cancel" onClick={() => setIsEditClassModalOpen(false)}>취소</button>
+                        <button type="submit" className="btn btn-primary">수정 완료</button>
+                    </div>
+                </form>
+            </Modal>
+            {/* 새 클래스 개설용 Modal */}
+            <Modal isOpen={isCreatingClass} onClose={() => setIsCreatingClass(false)} title="새 클래스 개설">
+                <form onSubmit={(e) => { e.preventDefault(); handleCreateClass(); }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div className="form-group">
+                        <label className="form-label">클래스명</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={newClassTitle}
+                            onChange={e => setNewClassTitle(e.target.value)}
+                            placeholder="변경할 클래스명 입력"
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">담당 교수자 지정</label>
+                        <select className="form-control" value={newClassProfId} onChange={e => setNewClassProfId(e.target.value)} required>
+                            <option value="">-- 담당 교수자 선택 --</option>
+                            {profUsers.map(p => (
+                                <option key={p.id} value={p.id}>{p.name} ({p.username})</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">클래스 설명</label>
+                        <textarea
+                            className="form-control"
+                            value={newClassDesc}
+                            onChange={(e) => setNewClassDesc(e.target.value)}
+                            placeholder="변경할 클래스 설명 (선택)"
+                            style={{ minHeight: '100px' }}
+                        ></textarea>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                        <button type="button" className="btn btn-cancel" onClick={() => setIsCreatingClass(false)}>취소</button>
+                        <button type="submit" className="btn btn-primary">생성하기</button>
+                    </div>
+                </form>
+            </Modal>
+
+        </div>
+    );
+}
