@@ -42,6 +42,7 @@ const createApiProxy = (target) => {
                     const skipLoading = (lastArg && typeof lastArg === 'object' && lastArg.skipLoading === true);
 
                     // API 호출 직전: 전역 로딩 시작 이벤트 발송
+                    // 이 이벤트는 Header.jsx나 전역 LoadingSpinner 컴포넌트에서 수신하여 스피너를 표시합니다.
                     if (!skipLoading && typeof window !== 'undefined') {
                         window.dispatchEvent(new Event('api-load-start'));
                     }
@@ -51,6 +52,7 @@ const createApiProxy = (target) => {
                         return await obj[prop](...args);
                     } finally {
                         // API 호출 직후 (성공/에러 무관): 전역 로딩 종료 이벤트 발송
+                        // 이벤트를 통해 전역 로딩 상태를 해제하여 스피너를 숨깁니다.
                         if (!skipLoading && typeof window !== 'undefined') {
                             window.dispatchEvent(new Event('api-load-end'));
                         }

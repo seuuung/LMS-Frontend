@@ -13,7 +13,7 @@ import Sidebar from '@/components/ui/Sidebar';
 import StatusBadge from '@/components/ui/StatusBadge';
 import ResourceList from '@/components/ui/ResourceList';
 import EmptyState from '@/components/ui/EmptyState';
-import QnaList from '@/components/ui/QnaList';
+import QnaList from '@/components/ui/qna/QnaList';
 
 /** 
  * 학생 클래스 학습 모바/데스크탑 대시보드

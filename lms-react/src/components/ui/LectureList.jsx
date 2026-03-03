@@ -31,7 +31,9 @@ export default function LectureList({ lectures, classId, uploadPath, onDelete, l
                     <EmptyState message="등록된 강의가 없습니다." />
                 ) : (
                     lectures.map(l => {
+                        // 해당 강의와 관련된 활동 로그만 필터링 (엔티티 타입과 ID 매칭)
                         const lectureLogs = logs.filter(log => log.entityType === 'lecture' && log.entityId === l.id);
+                        // 가장 최근 활동 날짜 추출 (로그가 있을 경우에만 표기)
                         const lastActivity = lectureLogs.length > 0 ? new Date(lectureLogs[0].timestamp).toLocaleDateString() : '-';
                         return (
                             <div className="list-item" key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -127,11 +127,15 @@ function LectureView() {
         let skipCheckInterval;
         let progressInterval;
 
+        /**
+         * 유튜브 플레이어 초기화 함수
+         * utils의 extractVideoId를 통해 링크에서 ID만 추출하여 플레이어를 마운트합니다.
+         */
         function initPlayer() {
             const videoId = extractVideoId(lecture.youtubeLink);
             if (!videoId) return;
 
-            // YouTube Player 객체 초기화
+            // YouTube Player 객체 초기화 (ID: vidPlayer인 요소에 바인딩)
             playerRef.current = new window.YT.Player('vidPlayer', {
                 videoId: videoId,
                 playerVars: { 'playsinline': 1, 'rel': 0 },
@@ -177,8 +181,9 @@ function LectureView() {
         }
 
         /**
-         * 구간 건너뛰기 방지 로직 (학생 전용)
+         * 구간 건너뛰기 방지 로직 (학생 전역)
          * 현재 재생 위치가 허용된 최대 시청 위치(maxAllowedTimeRef)를 벗어나면 강제로 이전 위치로 되돌립니다.
+         * 학습자가 이미 보았던 구간(95% 이상 완료된 영상)에 대해서는 제한을 해제합니다.
          */
         const checkAndEnforcePosition = (player) => {
             if (user?.role !== 'student') return;
@@ -188,12 +193,13 @@ function LectureView() {
 
             try {
                 const state = player.getPlayerState();
+                // 재생 중이거나 버퍼링 중인 상태에서만 체크
                 if (state !== window.YT.PlayerState.PLAYING && state !== window.YT.PlayerState.BUFFERING) return;
 
                 const currentTime = player.getCurrentTime();
-                const tolerance = 3;
+                const tolerance = 3; // 3초 정도의 오차 범위 허용
 
-                // 완료되지 않은 경우에만 건너뛰기 강제 방지
+                // 미완료 강의에 대해 현재 위치가 이전에 보았던 최대 위치를 넘어서면 되돌림
                 if (!isCompleted && currentTime > maxAllowedTimeRef.current + tolerance) {
                     player.pauseVideo();
                     player.seekTo(maxAllowedTimeRef.current, true);
@@ -205,38 +211,47 @@ function LectureView() {
                         setTimeout(() => { isEnforcingRef.current = false; }, 3000);
                     }
                 } else {
+                    // 정상 시청 중이라면 허용된 최대 시간(maxAllowedTime)을 현재 시간으로 갱신
                     if (currentTime > maxAllowedTimeRef.current) {
                         maxAllowedTimeRef.current = currentTime;
                     }
                 }
             } catch (e) {
-                // ignore
+                // 예외 상황 무시
             }
         };
 
+        /**
+         * 실시간 시청 진도 업데이트 함수
+         * 주기적으로(3초) 현재 시청 위치를 백엔드(Mock API)에 저장합니다.
+         */
         const updateProgress = async (player) => {
             if (user?.role !== 'student') return;
             try {
                 const currentTime = player.getCurrentTime();
                 const duration = player.getDuration();
                 if (duration > 0) {
+                    // 건너뛰기 강제 로직 작동 범위 밖이면 업데이트 중단
                     if (currentTime > maxAllowedTimeRef.current + 2) return;
 
                     let percent = Math.floor((currentTime / duration) * 100);
                     if (percent > 100) percent = 100;
 
+                    // 현재 위치가 최대 도달 위치보다 크면 갱신
                     if (currentTime > maxAllowedTimeRef.current) {
                         maxAllowedTimeRef.current = currentTime;
                     }
 
+                    // 수강률이 이전보다 작아지지 않도록 보정 (Max 유지)
                     percent = Math.max(percent, currentRateRef.current);
                     currentRateRef.current = percent;
 
+                    // 상태 업데이트 및 API 호출 (로딩 UI는 무거운 업데이트이므로 스킵)
                     await api.lectureViews.updateProgress(classId, lectureId, user.id, percent, currentTime, { skipLoading: true });
                     setProgressRate(percent);
                 }
             } catch (e) {
-                // ignore silently to prevent spam
+                // 성능 저하를 방지하기 위해 에러는 조용히 처리
             }
         };
 

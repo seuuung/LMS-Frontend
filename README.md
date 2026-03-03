@@ -26,6 +26,7 @@ LMS/
 │   ├── 요구사항 정의서.md
 │   ├── QnA_게시판_구현.md
 │   ├── 강의_업로드_및_재생_구현.md
+│   ├── 공통_UI_및_시스템_컴포넌트.md
 │   ├── 공통_사이드바_구현.md
 │   ├── 내_정보_관리_구현.md
 │   ├── 인증_및_사용자_관리_구현.md
@@ -34,7 +35,7 @@ LMS/
 │   ├── 학습_자료실_구현.md
 │   ├── 학습_진도율_및_통계_구현.md
 │   ├── 활동_내역_로그_구현.md
-│   └── Learning...svg               # 시스템 아키텍처 다이어그램
+│   └── Learning Management System-2026-02-25-063511.svg # 시스템 아키텍처 다이어그램
 └── lms-react/                       # Next.js 애플리케이션 루트
     ├── public/                      # 정적 파일 (favicon 등)
     └── src/
@@ -75,7 +76,10 @@ LMS/
         │       ├── LectureList.jsx      # 강의 목록 (admin/professor 공용)
         │       ├── ResourceList.jsx     # 자료 목록 (전 역할 공용)
         │       ├── ResourceForm.jsx     # 자료 등록 폼 (admin/professor 공용)
-        │       ├── QnaList.jsx          # QnA 게시판 (목록/상세/글쓰기 3모드)
+        │       ├── qna/                 #   QnA 컴포넌트 그룹
+        │       │   ├── QnaList.jsx       #    게시판 메인 (목록 및 모드 전환)
+        │       │   ├── QnaDetailView.jsx #    상세 보기 및 댓글
+        │       │   └── QnaWriteView.jsx  #    글쓰기 폼
         │       ├── EnrollmentList.jsx   # 수강생 현황 (admin/professor 공용)
         │       ├── UploadForm.jsx       # 강의 업로드 폼 (YouTube 링크 등록)
         │       ├── StudentDetail.jsx    # 개별 학생 진도 상세 뷰

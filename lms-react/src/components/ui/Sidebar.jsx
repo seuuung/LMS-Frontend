@@ -29,13 +29,16 @@ export default function Sidebar({ activeMenu }) {
         return '/student';
     };
 
+    /**
+     * 메뉴 클릭 핸들러
+     * 1. 현재 대시보드 외의 페이지(예: 강의 시청 중)라면 push를 통해 대시보드로 이동합니다.
+     * 2. 이미 대시보드 내에 있다면 replace를 통해 URL 히스토리를 쌓지 않고 탭만 전환합니다.
+     * 3. 쿼리 스트링(?tab=...)을 통해 대시보드 내부의 활성 탭을 제어합니다.
+     */
     const handleMenuClick = (tabKey) => {
-        // 현재 경로가 베이스 라우트와 다르면 베이스 라우트로 이동하면서 쿼리 탭 추가
         if (pathname !== getBaseRoute()) {
             router.push(`${getBaseRoute()}?tab=${tabKey}`);
         } else {
-            // 이미 베이스 라우트이면(대시보드 메인) 쿼리 파라미터만 교체 (혹은 부모에게 onClick 등을 위임할 수도 있지만, 
-            // 컴포넌트 내부에서 URL 갱신 방식을 강제)
             router.replace(`${getBaseRoute()}?tab=${tabKey}`);
         }
     };

@@ -26,6 +26,7 @@ export default function EnrollmentList({ enrolls, allUsers, lectures, allViews, 
                     const student = allUsers.find(u => u.id === e.studentId);
                     const studentName = student ? student.name : e.studentId;
 
+                    // 각 학생별 평균 수강률 계산: 전체 강의 중 시청 완료한 비율의 산술 평균
                     let avgProgress = 0;
                     if (lectures.length > 0) {
                         const studentViews = allViews.filter(v => v.studentId === e.studentId);

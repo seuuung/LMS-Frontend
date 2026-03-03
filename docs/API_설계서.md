@@ -1,7 +1,17 @@
 # 프론트엔드 - 백엔드 API 연동 명세서
 
 현재 LMS 프론트엔드는 로컬 환경 테스트를 위해 `api_mock.js` (localStorage 기반)로 통신하고 있으나, 백엔드 프레임워크와의 데이터 통신을 위해 `api_server.js`에 모든 Fetch 요청 인터페이스가 완벽히 구성(1:1 매핑)되어 있습니다.
-차후 백엔드 개발 시 **아래 39종의 REST API URI와 매개변수 구조**만 준수하여 서버를 구축하시면, 프론트엔드쪽 추가 수정 없이(`api.js`의 `USE_MOCK_API = false`로 옵션 1줄 전환) 즉시 100% 가동됩니다.
+
+### 🏛️ API 추상화 및 프록시 패턴 (Proxy Pattern)
+`api.js`는 모든 API 호출을 래핑하는 **Proxy 객체**를 반환합니다. 이를 통해 다음과 같은 전역 기능을 자동화합니다:
+- **자동 로딩 이벤트**: 모든 API 호출 직전 `api-load-start` 이벤트를, 종료 후 `api-load-end` 이벤트를 발송하여 전역 로딩 스피너를 제어합니다.
+- **로딩 우회**: `{ skipLoading: true }` 인자를 전달하여 특정 호출에서 로딩 UI를 생략할 수 있습니다.
+- **재귀적 프록시**: `api.auth.login()`과 같이 중첩된 하위 객체 메서드 체이닝을 지원합니다.
+
+### 🔁 Mock / Server 스위칭 메커니즘
+`src/lib/api/api.js`의 변수 하나로 전체 시스템의 데이터 소스를 전환할 수 있습니다.
+- `const USE_MOCK_API = true;` ➔ **Mock Mode**: 클라이언트 `localStorage`를 DB로 활용 (오프라인 테스트용)
+- `const USE_MOCK_API = false;` ➔ **Server Mode**: 실제 백엔드 서버(`/api/...`)와 REST 통신
 
 ---
 

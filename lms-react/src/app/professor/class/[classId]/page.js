@@ -14,7 +14,7 @@ import Sidebar from '@/components/ui/Sidebar';
 import LectureList from '@/components/ui/LectureList';
 import ResourceList from '@/components/ui/ResourceList';
 import ResourceForm from '@/components/ui/ResourceForm';
-import QnaList from '@/components/ui/QnaList';
+import QnaList from '@/components/ui/qna/QnaList';
 import EnrollmentList from '@/components/ui/EnrollmentList';
 import ActivityLogModal from '@/components/ui/ActivityLogModal';
 
