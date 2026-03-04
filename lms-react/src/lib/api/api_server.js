@@ -38,14 +38,25 @@ const request = async (method, path, body = null) => {
         // 204 No Content: 성공했으나 반환할 데이터가 없는 경우
         if (response.status === 204) return null;
 
-        const data = await response.json();
+        const responseData = await response.json();
 
         // HTTP 상태 코드가 200-299 범위가 아닌 경우 에러 처리
         if (!response.ok) {
-            throw new Error(data.message || `서버 오류 (${response.status})`);
+            throw new Error(responseData.error || responseData.message || `서버 오류 (${response.status})`);
         }
 
-        return data;
+        // 백엔드 공통 응답 포맷({ success, data, error }) 처리
+        if (responseData && typeof responseData.success === 'boolean') {
+            if (!responseData.success) {
+                // success가 false이면 error 필드를 메시지로 사용
+                throw new Error(responseData.error || 'API 요청 실패');
+            }
+            // success가 true이면 data 객체 안의 알맹이만 반환
+            return responseData.data;
+        }
+
+        // 공통 포맷이 아닐 경우(예외 처리) 전체 데이터 반환
+        return responseData;
     } catch (error) {
         // 네트워크 장애 또는 API 에러 발생 시 로그 출력
         console.error(`[API ERROR] ${method} ${path}:`, error);
