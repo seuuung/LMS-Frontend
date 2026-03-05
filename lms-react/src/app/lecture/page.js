@@ -327,6 +327,17 @@ function LectureView() {
 
     const isInstructorMode = user.role === 'prof' || user.role === 'admin';
 
+    const badgeEl = user.role === 'student' ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>진도율:</span>
+            <StatusBadge rate={progressRate} />
+        </div>
+    ) : statsInfo ? (
+        <span className="badge badge-complete" style={{ whiteSpace: 'nowrap' }}>
+            수강 완료 {statsInfo.completedCount}명 / 전체 {statsInfo.totalStudents}명
+        </span>
+    ) : null;
+
     return (
         <div className="container lecture-layout">
 
@@ -353,13 +364,7 @@ function LectureView() {
                             )}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-                            {user.role === 'student' ? (
-                                <StatusBadge rate={progressRate} />
-                            ) : statsInfo ? (
-                                <span className="badge badge-complete" style={{ whiteSpace: 'nowrap' }}>
-                                    수강 완료 {statsInfo.completedCount}명 / 전체 {statsInfo.totalStudents}명
-                                </span>
-                            ) : null}
+                            {badgeEl}
 
                             {isInstructorMode && !isEditing && (
                                 <button className="btn" style={{ background: '#f8fafc', border: '1px solid #cbd5e1', fontSize: '0.85rem', padding: '0.3rem 0.6rem' }} onClick={handleEditInit}>수정하기</button>
