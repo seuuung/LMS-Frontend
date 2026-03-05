@@ -9,6 +9,11 @@ import { api } from '@/lib/api/api';
 import Modal from '@/components/ui/Modal';
 import Sidebar from '@/components/ui/Sidebar';
 import ActivityLogModal from '@/components/ui/ActivityLogModal';
+import Pagination from '@/components/ui/Pagination';
+import { usePagination } from '@/hooks/usePagination';
+import ClassCard from '@/components/ui/ClassCard';
+import CardDropdownMenu from '@/components/ui/CardDropdownMenu';
+import { useLectureCounts } from '@/hooks/useLectureCounts';
 
 export default function AdminDashboardPage() {
     return (
@@ -41,12 +46,9 @@ function AdminDashboard() {
     const [logModalContext, setLogModalContext] = useState(null);
     const [classSearch, setClassSearch] = useState('');
     const [userSearch, setUserSearch] = useState('');
+    const [activeDropdownId, setActiveDropdownId] = useState(null);
+    const lectureCounts = useLectureCounts(allClasses);
 
-    // --- My Info Form State ---
-    const [infoName, setInfoName] = useState('');
-    const [currentPassword, setCurrentPassword] = useState('');
-    const [infoPassword, setInfoPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
 
     // --- Create User Modal State ---
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -66,16 +68,16 @@ function AdminDashboard() {
     const [newClassDesc, setNewClassDesc] = useState('');
     const [newClassProfId, setNewClassProfId] = useState('');
 
+    // --- Admin Dashboard UI State ---
+    const [roleFilter, setRoleFilter] = useState('all');
+
     // --- 데이터 초기화 및 패칭 ---
     useEffect(() => {
         if (!requireAuth(['admin'])) return;
 
         const tab = searchParams.get('tab') || searchParams.get('t');
         if (tab === 'classes') setActiveTab('classes');
-        else if (tab === 'myInfo') setActiveTab('myInfo');
         else setActiveTab('users');
-
-        if (user) setInfoName(user.name || '');
 
         loadData();
     }, [user, searchParams]);
@@ -99,34 +101,7 @@ function AdminDashboard() {
         }
     };
 
-    const handleSaveInfo = async (e) => {
-        e.preventDefault();
-        try {
-            if (infoName.trim() && infoName !== user.name) {
-                await api.users.update(user.id, { name: infoName.trim() });
-            }
-            if (infoPassword.trim()) {
-                if (!currentPassword.trim()) {
-                    showToast('기존 비밀번호를 입력해주세요.', 'error');
-                    return;
-                }
-                if (infoPassword !== confirmPassword) {
-                    showToast('새 비밀번호가 일치하지 않습니다.', 'error');
-                    return;
-                }
-                await api.users.updatePassword(user.id, currentPassword.trim(), infoPassword.trim());
-            }
-            showToast('내 정보가 성공적으로 수정되었습니다.', 'success');
-            if (infoName.trim() && infoName !== user.name) {
-                updateUser({ name: infoName.trim() });
-            }
-            setCurrentPassword('');
-            setInfoPassword('');
-            setConfirmPassword('');
-        } catch (err) {
-            showToast(err.message || '정보 수정에 실패했습니다.', 'error');
-        }
-    };
+
 
     // --- User Management ---
     const handleAddUser = async (e) => {
@@ -172,11 +147,12 @@ function AdminDashboard() {
                 await api.users.updatePassword(id, password.trim());
             }
 
-            // 권한 변경이 함께 일어난 경우
-            const currentUser = allUsers.find(u => u.id === id);
-            if (currentUser && currentUser.role !== role) {
-                await api.users.updateRole(id, role);
+            // 모달 안에서 역할(Role)도 수정할 수 있다면:
+            // (Mock API 구조상 role 수정 기능이 제공된다면 반영, 기본적으로 users 업데이트 활용)
+            if (role) {
+                await api.users.update(id, { role });
             }
+
             showToast('유저 정보가 수정되었습니다.', 'success');
             setIsEditUserModalOpen(false);
             loadData();
@@ -232,11 +208,38 @@ function AdminDashboard() {
     const filteredClasses = allClasses.filter(c =>
         c.title.toLowerCase().includes(classSearch.toLowerCase())
     );
+    const {
+        currentData: classesToDisplay,
+        currentPage: classCurrentPage,
+        totalPages: classTotalPages,
+        prevPage: classPrevPage,
+        nextPage: classNextPage,
+        setCurrentPage: setClassCurrentPage
+    } = usePagination(filteredClasses, 10);
 
-    const filteredUsers = allUsers.filter(u =>
-        u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
-        u.username.toLowerCase().includes(userSearch.toLowerCase())
-    );
+    useEffect(() => {
+        setClassCurrentPage(1);
+    }, [classSearch, setClassCurrentPage]);
+
+    const filteredUsers = allUsers.filter(u => {
+        const matchesSearch = u.username.toLowerCase().includes(userSearch.toLowerCase()) ||
+            (u.name && u.name.toLowerCase().includes(userSearch.toLowerCase()));
+        const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+        return matchesSearch && matchesRole;
+    });
+
+    const {
+        currentData: usersToDisplay,
+        currentPage: userCurrentPage,
+        totalPages: userTotalPages,
+        prevPage: userPrevPage,
+        nextPage: userNextPage,
+        setCurrentPage: setUserCurrentPage
+    } = usePagination(filteredUsers, 20);
+
+    useEffect(() => {
+        setUserCurrentPage(1);
+    }, [userSearch, roleFilter, setUserCurrentPage]);
 
     const profUsers = allUsers.filter(u => u.role === 'prof');
 
@@ -248,48 +251,24 @@ function AdminDashboard() {
 
             <div className="content">
 
-                {activeTab === 'myInfo' && (
-                    <section className="card">
-                        <h2>내 정보 수정</h2>
-                        <div style={{ marginTop: '1.5rem', maxWidth: '500px' }}>
-                            <form onSubmit={handleSaveInfo}>
-                                <div className="form-group">
-                                    <label className="form-label">아이디</label>
-                                    <input type="text" className="form-control" value={user.username} disabled style={{ backgroundColor: '#f1f5f9' }} />
-                                    <small style={{ color: 'var(--text-muted)' }}>아이디는 변경할 수 없습니다.</small>
-                                </div>
-                                <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                                    <label className="form-label">이름</label>
-                                    <input type="text" className="form-control" value={infoName} onChange={e => setInfoName(e.target.value)} required />
-                                </div>
-                                <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                                    <label className="form-label">기존 비밀번호</label>
-                                    <input type="password" className="form-control" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="현재 비밀번호를 입력하세요" />
-                                </div>
-                                <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                                    <label className="form-label">새 비밀번호</label>
-                                    <input type="password" className="form-control" value={infoPassword} onChange={e => setInfoPassword(e.target.value)} placeholder="새 비밀번호를 입력하세요" />
-                                </div>
-                                <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                                    <label className="form-label">새 비밀번호 확인</label>
-                                    <input type="password" className="form-control" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="새 비밀번호를 다시 입력하세요" />
-                                    {confirmPassword && (
-                                        <small style={{ color: infoPassword === confirmPassword ? '#22c55e' : '#ef4444', fontWeight: 600, marginTop: '0.4rem', display: 'block' }}>
-                                            {infoPassword === confirmPassword ? '✅ 비밀번호가 일치합니다.' : '❌ 비밀번호가 일치하지 않습니다.'}
-                                        </small>
-                                    )}
-                                </div>
-                                <button type="submit" className="btn btn-primary" style={{ marginTop: '2rem', width: '100%' }}>정보 업데이트</button>
-                            </form>
-                        </div>
-                    </section>
-                )}
+
 
                 {activeTab === 'users' && (
                     <section className="card">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                             <h2>사용자 통합 관리</h2>
                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                <select
+                                    className="form-control"
+                                    style={{ width: 'auto', minWidth: '120px' }}
+                                    value={roleFilter}
+                                    onChange={(e) => setRoleFilter(e.target.value)}
+                                >
+                                    <option value="all">전체</option>
+                                    <option value="admin">관리자</option>
+                                    <option value="prof">교수자</option>
+                                    <option value="student">학습자</option>
+                                </select>
                                 <input
                                     type="text"
                                     className="form-control"
@@ -314,7 +293,7 @@ function AdminDashboard() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredUsers.map(u => {
+                                    {usersToDisplay.map(u => {
                                         const createdDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-';
                                         const updatedDate = u.updatedAt ? new Date(u.updatedAt).toLocaleDateString() : '-';
                                         return (
@@ -344,12 +323,20 @@ function AdminDashboard() {
                                     })}
                                     {filteredUsers.length === 0 && (
                                         <tr>
-                                            <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>사용자가 없습니다.</td>
+                                            <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>조건에 맞는 사용자가 없습니다.</td>
                                         </tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
+
+                        <Pagination
+                            currentPage={userCurrentPage}
+                            totalPages={userTotalPages}
+                            onPrev={userPrevPage}
+                            onNext={userNextPage}
+                            onPageChange={setUserCurrentPage}
+                        />
                     </section>
                 )}
 
@@ -372,47 +359,55 @@ function AdminDashboard() {
 
 
                         <div className="class-grid mt-4">
-                            {filteredClasses.length === 0 ? (
+                            {classesToDisplay.length === 0 ? (
                                 <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>클래스가 없습니다.</p>
                             ) : (
-                                filteredClasses.map(c => {
+                                classesToDisplay.map(c => {
                                     const prof = allUsers.find(u => u.id === c.profId);
                                     const classLogs = logs.filter(l => l.classId === c.id || (l.entityType === 'class' && l.entityId === c.id));
                                     const lastActivity = classLogs.length > 0 ? new Date(classLogs[0].timestamp).toLocaleDateString() : '-';
                                     return (
-                                        <div className="class-card cursor-pointer" key={c.id} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%' }}>
-                                            <div style={{ marginBottom: '1rem' }} onClick={() => router.push(`/admin/class/${c.id}`)}>
-                                                <h3 style={{ marginBottom: '0.5rem', color: 'var(--text-main)', wordBreak: 'keep-all' }}>{c.title}</h3>
-                                                <p style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }}>{c.description}</p>
-                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>담당 교수: {prof ? prof.name : c.profId}</div>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '1rem' }}>
-                                                    <small style={{ color: '#94a3b8' }}>생성일: {new Date(c.createdAt).toLocaleDateString()}</small>
-                                                    <small style={{ color: '#3b82f6' }}>최근 활동: {lastActivity}</small>
+                                        <ClassCard
+                                            key={c.id}
+                                            classData={c}
+                                            lectureCount={lectureCounts[c.id]}
+                                            professorName={prof ? prof.name : c.profId}
+                                            onClick={() => router.push(`/admin/class/${c.id}`)}
+                                            actionButton={
+                                                <CardDropdownMenu
+                                                    itemId={c.id}
+                                                    activeDropdownId={activeDropdownId}
+                                                    setActiveDropdownId={setActiveDropdownId}
+                                                    menuItems={[
+                                                        { label: '강의정보수정', onClick: () => { setEditClassForm({ id: c.id, title: c.title, description: c.description || '' }); setIsEditClassModalOpen(true); } },
+                                                        { label: '로그보기', onClick: () => { setLogModalContext({ entityType: 'class', entityId: c.id, title: `클래스 '${c.title}' 전체 활동 이력` }); } },
+                                                        { label: '삭제', danger: true, onClick: () => handleDeleteClass(c.id) }
+                                                    ]}
+                                                />
+                                            }
+                                            footer={
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                                        <small style={{ color: '#64748b', fontSize: '0.75rem' }}>생성일: {new Date(c.createdAt).toLocaleDateString()}</small>
+                                                        <small style={{ color: '#3b82f6', fontSize: '0.75rem', fontWeight: '500' }}>최근 활동: {lastActivity}</small>
+                                                    </div>
+                                                    <span style={{ color: 'var(--primary-color)', fontWeight: '600', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                                        관리 <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>&rarr;</span>
+                                                    </span>
                                                 </div>
-                                            </div>
-                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: 'auto' }}>
-                                                <button className="btn" style={{ border: '1px solid #94a3b8', color: '#475569', background: 'transparent', padding: '0.75rem 0', borderRadius: '0.5rem', fontWeight: 'bold' }} onClick={(e) => { e.stopPropagation(); setLogModalContext({ entityType: 'class', entityId: c.id, title: `클래스 '${c.title}' 전체 활동 이력` }); }}>
-                                                    로그 보기
-                                                </button>
-                                                <button className="btn btn-primary" style={{ padding: '0.75rem 0', borderRadius: '0.5rem', fontWeight: 'bold' }} onClick={(e) => { e.stopPropagation(); router.push(`/admin/class/${c.id}`); }}>
-                                                    관리
-                                                </button>
-                                                <button className="btn" style={{ border: '1px solid var(--primary-color)', color: 'var(--primary-color)', background: 'transparent', padding: '0.75rem 0', borderRadius: '0.5rem', fontWeight: 'bold' }} onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setEditClassForm({ id: c.id, title: c.title, description: c.description || '' });
-                                                    setIsEditClassModalOpen(true);
-                                                }}>
-                                                    수정
-                                                </button>
-                                                <button className="btn" style={{ border: '1px solid #ef4444', color: '#ef4444', background: 'transparent', padding: '0.75rem 0', borderRadius: '0.5rem', fontWeight: 'bold' }} onClick={(e) => { e.stopPropagation(); handleDeleteClass(c.id); }}>
-                                                    삭제
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )
+                                            }
+                                        />
+                                    );
                                 })
                             )}
                         </div>
+                        <Pagination
+                            currentPage={classCurrentPage}
+                            totalPages={classTotalPages}
+                            onPrev={classPrevPage}
+                            onNext={classNextPage}
+                            onPageChange={setClassCurrentPage}
+                        />
                     </section>
                 )}
             </div>

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import EmptyState from './EmptyState';
+import ActionButton from './ActionButton';
 
 /**
  * 강의 목록 컴포넌트 (관리자/교수자 공용)
@@ -42,10 +43,10 @@ export default function LectureList({ lectures, classId, uploadPath, onDelete, l
                                     <span style={{ color: '#94a3b8', fontSize: '0.8rem', marginLeft: '0.5rem' }}>최근 활동: {lastActivity}</span>
                                 </span>
                                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                    <button className="btn" style={{ background: '#e2e8f0', color: '#0f172a', padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => router.push(`/lecture?classId=${classId}&lectureId=${l.id}`)}>영상 보기</button>
-                                    <button className="btn" style={{ background: '#eff6ff', color: '#3b82f6', padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => router.push(`/lecture_stats?classId=${classId}&lectureId=${l.id}`)}>수강률 통계</button>
-                                    {onViewLog && <button className="btn" style={{ background: '#f1f5f9', color: '#475569', padding: '0.3rem 0.6rem', fontSize: '0.8rem', border: '1px solid #cbd5e1' }} onClick={() => onViewLog(l.id, l.title)}>로그 보기</button>}
-                                    <button className="action-btn del" onClick={() => onDelete(l.id)}>삭제</button>
+                                    <ActionButton variant="secondary" onClick={() => router.push(`/lecture?classId=${classId}&lectureId=${l.id}`)}>영상 보기</ActionButton>
+                                    <ActionButton variant="primary" onClick={() => router.push(`/lecture_stats?classId=${classId}&lectureId=${l.id}`)}>수강률 통계</ActionButton>
+                                    {onViewLog && <ActionButton variant="outline" onClick={() => onViewLog(l.id, l.title)}>로그 보기</ActionButton>}
+                                    <ActionButton variant="danger" className="action-btn del" onClick={() => onDelete(l.id)}>삭제</ActionButton>
                                 </div>
                             </div>
                         )

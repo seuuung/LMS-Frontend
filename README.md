@@ -72,7 +72,9 @@ LMS/
         │       ├── StatusBadge.jsx      # 수강 상태 뱃지 (완료/진행중/미수강)
         │       ├── TabBar.jsx           # 탭 전환 바
         │       ├── EmptyState.jsx       # 빈 목록 안내 메시지
+        │       ├── Pagination.jsx       # 다목적 공용 페이지네이션 모듈
         │       ├── Sidebar.jsx          # 역할별 공통 사이드바 네비게이션
+        │       ├── ActionButton.jsx     # 공용 기능 동작 버튼 컴포넌트
         │       ├── LectureList.jsx      # 강의 목록 (admin/professor 공용)
         │       ├── ResourceList.jsx     # 자료 목록 (전 역할 공용)
         │       ├── ResourceForm.jsx     # 자료 등록 폼 (admin/professor 공용)
@@ -93,7 +95,8 @@ LMS/
         ├── hooks/                   # 커스텀 훅 (Context 소비 인터페이스)
         │   ├── useAuth.js
         │   ├── useToast.js
-        │   └── useConfirm.js
+        │   ├── useConfirm.js
+        │   └── usePagination.js     # 리스트 데이터 슬라이싱 및 페이징 상태 관리
         │
         └── lib/                     # 유틸리티 및 데이터 로직
             ├── utils.js             # 공용 헬퍼 (extractVideoId, formatDate)

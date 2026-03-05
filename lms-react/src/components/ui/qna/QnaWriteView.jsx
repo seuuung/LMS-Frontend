@@ -47,7 +47,7 @@ export default function QnaWriteView({ currentUser, onSubmit, onCancel }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: '#64748b', cursor: 'pointer' }}>
                         <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
-                        🔒 비공개 (교수자와 관리자만 볼 수 있음)
+                        🔒 비공개 (교수자만 볼 수 있음)
                     </label>
                     <div style={{ display: 'flex', gap: '0.75rem' }}>
                         <button className="btn btn-secondary" onClick={onCancel}>취소</button>

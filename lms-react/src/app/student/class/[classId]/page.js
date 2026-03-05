@@ -132,7 +132,7 @@ export default function StudentClassDashboard() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                             <Link href="/student" className="btn btn-back" style={{ whiteSpace: 'nowrap' }}>&larr; 내 학습 공간</Link>
                         </div>
-                        <h2 style={{ margin: 0 }}>{currentClass.title} - 대시보드</h2>
+                        <h2 style={{ margin: 0 }}>{currentClass.title}</h2>
                     </div>
 
                     <div id="learningArea">

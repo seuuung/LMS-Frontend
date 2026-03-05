@@ -6,6 +6,10 @@ import { api } from '@/lib/api/api';
 import { useToast } from '@/hooks/useToast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/ui/Sidebar';
+import Pagination from '@/components/ui/Pagination';
+import { usePagination } from '@/hooks/usePagination';
+import ClassCard from '@/components/ui/ClassCard';
+import { useLectureCounts } from '@/hooks/useLectureCounts';
 
 /**
  * 학습자 전용 대시보드 컴포넌트
@@ -27,59 +31,43 @@ export default function StudentDashboard() {
     const [allUsers, setAllUsers] = useState([]);
     const [myClasses, setMyClasses] = useState([]);
     const [enrollmentCode, setEnrollmentCode] = useState('');
+    const lectureCounts = useLectureCounts(allClasses);
 
     // 수동 선택 모달 상태 관리
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedClassToEnroll, setSelectedClassToEnroll] = useState(null);
     const [modalEnrollCode, setModalEnrollCode] = useState('');
 
-    const [infoName, setInfoName] = useState('');
-    const [currentPassword, setCurrentPassword] = useState('');
-    const [infoPassword, setInfoPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
+    // 내 정보 모달로 분리되어 관련 폼 상태 제외됨
+    const {
+        currentData: myClassesToDisplay,
+        currentPage: myClassCurrentPage,
+        totalPages: myClassTotalPages,
+        prevPage: myClassPrevPage,
+        nextPage: myClassNextPage,
+        setCurrentPage: setMyClassCurrentPage,
+    } = usePagination(myClasses, 10);
+
+    const {
+        currentData: allClassesToDisplay,
+        currentPage: exploreCurrentPage,
+        totalPages: exploreTotalPages,
+        prevPage: explorePrevPage,
+        nextPage: exploreNextPage,
+        setCurrentPage: setExploreCurrentPage,
+    } = usePagination(allClasses, 10);
 
     useEffect(() => {
         if (!requireAuth(['student', 'admin'])) return;
         loadData();
-        if (user) {
-            setInfoName(user.name || '');
-        }
 
         const tab = searchParams.get('tab');
-        if (tab === 'myInfo') setActiveTab('myInfo');
-        else if (tab === 'exploreClasses') setActiveTab('exploreClasses');
+        if (tab === 'exploreClasses') setActiveTab('exploreClasses');
         else setActiveTab('myClasses');
 
     }, [user, searchParams]);
 
-    const handleSaveInfo = async (e) => {
-        e.preventDefault();
-        try {
-            if (infoName.trim() && infoName !== user.name) {
-                await api.users.update(user.id, { name: infoName.trim() });
-            }
-            if (infoPassword.trim()) {
-                if (!currentPassword.trim()) {
-                    showToast('기존 비밀번호를 입력해주세요.', 'error');
-                    return;
-                }
-                if (infoPassword !== confirmPassword) {
-                    showToast('새 비밀번호가 일치하지 않습니다.', 'error');
-                    return;
-                }
-                await api.users.updatePassword(user.id, currentPassword.trim(), infoPassword.trim());
-            }
-            showToast('내 정보가 성공적으로 수정되었습니다.', 'success');
-            if (infoName.trim() && infoName !== user.name) {
-                updateUser({ name: infoName.trim() });
-            }
-            setCurrentPassword('');
-            setInfoPassword('');
-            setConfirmPassword('');
-        } catch (err) {
-            showToast(err.message || '정보 수정에 실패했습니다.', 'error');
-        }
-    };
+
 
     /**
      * 대시보드 전체 데이터 로드
@@ -161,42 +149,7 @@ export default function StudentDashboard() {
             <Sidebar activeMenu={activeTab} />
 
             <div className="content">
-                {activeTab === 'myInfo' && (
-                    <section className="card">
-                        <h2>내 정보 수정</h2>
-                        <div style={{ marginTop: '1.5rem', maxWidth: '500px' }}>
-                            <form onSubmit={handleSaveInfo}>
-                                <div className="form-group">
-                                    <label className="form-label">아이디</label>
-                                    <input type="text" className="form-control" value={user.username} disabled style={{ backgroundColor: '#f1f5f9' }} />
-                                    <small style={{ color: 'var(--text-muted)' }}>아이디는 변경할 수 없습니다.</small>
-                                </div>
-                                <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                                    <label className="form-label">이름</label>
-                                    <input type="text" className="form-control" value={infoName} onChange={e => setInfoName(e.target.value)} required />
-                                </div>
-                                <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                                    <label className="form-label">기존 비밀번호</label>
-                                    <input type="password" className="form-control" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="현재 비밀번호를 입력하세요" />
-                                </div>
-                                <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                                    <label className="form-label">새 비밀번호</label>
-                                    <input type="password" className="form-control" value={infoPassword} onChange={e => setInfoPassword(e.target.value)} placeholder="새 비밀번호를 입력하세요" />
-                                </div>
-                                <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                                    <label className="form-label">새 비밀번호 확인</label>
-                                    <input type="password" className="form-control" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="새 비밀번호를 다시 입력하세요" />
-                                    {confirmPassword && (
-                                        <small style={{ color: infoPassword === confirmPassword ? '#22c55e' : '#ef4444', fontWeight: 600, marginTop: '0.4rem', display: 'block' }}>
-                                            {infoPassword === confirmPassword ? '✅ 비밀번호가 일치합니다.' : '❌ 비밀번호가 일치하지 않습니다.'}
-                                        </small>
-                                    )}
-                                </div>
-                                <button type="submit" className="btn btn-primary" style={{ marginTop: '2rem', width: '100%' }}>정보 업데이트</button>
-                            </form>
-                        </div>
-                    </section>
-                )}
+
 
                 {activeTab === 'exploreClasses' && (
                     <section className="card">
@@ -220,46 +173,51 @@ export default function StudentDashboard() {
                         <div style={{ marginTop: '3rem', borderTop: '1px solid #e2e8f0', paddingTop: '2rem' }}>
                             <h3 style={{ marginBottom: '1.5rem' }}>전체 클래스 탐색</h3>
                             <div className="class-grid">
-                                {allClasses.length === 0 ? (
+                                {allClassesToDisplay.length === 0 ? (
                                     <p style={{ color: 'var(--text-muted)' }}>현재 수강 가능한 강좌가 없습니다.</p>
                                 ) : (
-                                    allClasses.map(c => {
+                                    allClassesToDisplay.map(c => {
                                         const isEnrolled = myClassIds.includes(c.id);
                                         return (
-                                            <div className="class-card" key={c.id} style={{
-                                                display: 'flex', flexDirection: 'column',
-                                                ...(isEnrolled ? { border: '1px solid #cbd5e1', background: '#f8fafc' } : {})
-                                            }}>
-                                                <h4 style={{ fontSize: '1.1rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                    {c.title}
-                                                    {isEnrolled && <span className="badge badge-complete" style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}>수강 중</span>}
-                                                </h4>
-                                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.description}</p>
-                                                <div style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '1rem', flex: 1 }}>
-                                                    담당 교수: {allUsers.find(u => u.id === c.profId)?.name || '알 수 없음'}
-                                                </div>
-                                                {isEnrolled ? (
-                                                    <button
-                                                        className="btn"
-                                                        style={{ width: '100%', padding: '0.5rem', background: '#e2e8f0', color: '#334155', fontWeight: '600', marginTop: 'auto' }}
-                                                        onClick={() => router.push(`/student/class/${c.id}`)}
-                                                    >
-                                                        학습 공간으로 이동
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        className="btn btn-primary"
-                                                        style={{ width: '100%', padding: '0.5rem', marginTop: 'auto' }}
-                                                        onClick={() => openEnrollModal(c)}
-                                                    >
-                                                        수강 신청
-                                                    </button>
-                                                )}
-                                            </div>
+                                            <ClassCard
+                                                key={c.id}
+                                                classData={c}
+                                                lectureCount={lectureCounts[c.id]}
+                                                professorName={allUsers.find(u => u.id === c.profId)?.name || '알 수 없음'}
+                                                isEnrolled={isEnrolled}
+                                                onClick={() => isEnrolled ? router.push(`/student/class/${c.id}`) : openEnrollModal(c)}
+                                                badge={isEnrolled && <span className="badge badge-complete" style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', whiteSpace: 'nowrap', marginLeft: '0.5rem' }}>수강 중</span>}
+                                                footer={
+                                                    <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                                                        {isEnrolled ? (
+                                                            <button
+                                                                className="btn-purple"
+                                                                onClick={(e) => { e.stopPropagation(); router.push(`/student/class/${c.id}`); }}
+                                                            >
+                                                                강의실 입장
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                className="btn-purple"
+                                                                onClick={(e) => { e.stopPropagation(); openEnrollModal(c); }}
+                                                            >
+                                                                참여하기
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                }
+                                            />
                                         );
                                     })
                                 )}
                             </div>
+                            <Pagination
+                                currentPage={exploreCurrentPage}
+                                totalPages={exploreTotalPages}
+                                onPrev={explorePrevPage}
+                                onNext={exploreNextPage}
+                                onPageChange={setExploreCurrentPage}
+                            />
                         </div>
                     </section>
                 )}
@@ -268,25 +226,34 @@ export default function StudentDashboard() {
                     <section className="card">
                         <h2>내 학습 공간</h2>
                         <div className="class-grid mt-4">
-                            {myClasses.length === 0 ? (
+                            {myClassesToDisplay.length === 0 ? (
                                 <p>수강 중인 클래스가 없습니다.</p>
                             ) : (
-                                myClasses.map(c => (
-                                    <div
-                                        className="class-card cursor-pointer"
+                                myClassesToDisplay.map(c => (
+                                    <ClassCard
                                         key={c.id}
+                                        classData={c}
+                                        lectureCount={lectureCounts[c.id]}
+                                        professorName={allUsers.find(u => u.id === c.profId)?.name || '알 수 없음'}
                                         onClick={() => router.push(`/student/class/${c.id}`)}
-                                    >
-                                        <h3>{c.title}</h3>
-                                        <p>{c.description}</p>
-                                        <div style={{ fontSize: '0.85rem', color: '#64748b', margin: '0.5rem 0 1rem' }}>
-                                            담당 교수: {allUsers.find(u => u.id === c.profId)?.name || '알 수 없음'}
-                                        </div>
-                                        <button className="btn btn-primary mt-4" style={{ width: '100%' }}>학습 시작</button>
-                                    </div>
+                                        footer={
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
+                                                <button className="btn-purple">
+                                                    강의실 입장
+                                                </button>
+                                            </div>
+                                        }
+                                    />
                                 ))
                             )}
                         </div>
+                        <Pagination
+                            currentPage={myClassCurrentPage}
+                            totalPages={myClassTotalPages}
+                            onPrev={myClassPrevPage}
+                            onNext={myClassNextPage}
+                            onPageChange={setMyClassCurrentPage}
+                        />
                     </section>
                 )}
             </div>

@@ -279,15 +279,8 @@ export default function AdminClassDashboard() {
                             <div style={{ background: '#e0e7ff', color: '#4338ca', padding: '0.4rem 0.8rem', borderRadius: '6px', fontWeight: 600, fontSize: '0.9rem' }}>
                                 참여 코드: {currentClass.enrollmentCode || '발급안됨'}
                             </div>
-                            <button
-                                className="action-btn"
-                                onClick={() => {
-                                    setEditClassForm({ title: currentClass.title, description: currentClass.description || '' });
-                                    setIsEditClassModalOpen(true);
-                                }}
-                            >수정</button>
                         </div>
-                        <h2 style={{ margin: 0 }}>{currentClass.title} - 대시보드 (관리자)</h2>
+                        <h2 style={{ margin: 0 }}>{currentClass.title}</h2>
                     </div>
 
                     {/* 담당 교수 변경 영역 */}
@@ -307,7 +300,22 @@ export default function AdminClassDashboard() {
                         {/* 클래스 소개 탭 */}
                         {activeTab === 'info' && (
                             <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', minHeight: '150px', marginTop: '1.5rem' }}>
-                                <h4 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>강좌 소개</h4>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                                    <h4 style={{ margin: 0, color: 'var(--primary-color)' }}>강좌 소개</h4>
+                                    <button
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', padding: '0.2rem' }}
+                                        onClick={() => {
+                                            setEditClassForm({ title: currentClass.title, description: currentClass.description || '' });
+                                            setIsEditClassModalOpen(true);
+                                        }}
+                                        title="강좌 정보 수정"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M12 20h9"></path>
+                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
                                 {currentClass.description ? (
                                     <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', color: 'var(--text-color)' }}>
                                         {currentClass.description}

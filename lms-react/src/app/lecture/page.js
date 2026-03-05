@@ -8,6 +8,7 @@ import { useConfirm } from '@/hooks/useConfirm';
 import { api } from '@/lib/api/api';
 import { extractVideoId } from '@/lib/utils';
 import StatusBadge from '@/components/ui/StatusBadge';
+import ActionButton from '@/components/ui/ActionButton';
 
 export default function LectureViewPage() {
     return (
@@ -141,7 +142,8 @@ function LectureView() {
                 playerVars: { 'playsinline': 1, 'rel': 0 },
                 events: {
                     'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
+                    'onStateChange': onPlayerStateChange,
+                    'onPlaybackRateChange': onPlaybackRateChange
                 }
             });
         }
@@ -177,6 +179,20 @@ function LectureView() {
                     progressInterval = null;
                 }
                 updateProgress(player);
+            }
+        }
+
+        function onPlaybackRateChange(event) {
+            const player = event.target;
+            if (user?.role !== 'student') return;
+
+            const isCompleted = currentRateRef.current >= 95;
+            if (!isCompleted) {
+                const currentRate = player.getPlaybackRate();
+                if (currentRate > 1.0) {
+                    player.setPlaybackRate(1.0);
+                    showToast('수강 완료 전에는 배속 재생이 제한됩니다.', 'error');
+                }
             }
         }
 
@@ -385,6 +401,18 @@ function LectureView() {
                 <div className="side-card" style={{ marginBottom: '1.5rem' }}>
                     <h3 style={{ margin: 0, fontSize: '1rem', marginBottom: '0.5rem' }}>학습 현황</h3>
                     {badgeEl}
+
+                    {isInstructorMode && statsInfo && (
+                        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px dashed #e2e8f0' }}>
+                            <ActionButton
+                                variant="primary"
+                                style={{ width: '100%', padding: '0.5rem', fontSize: '0.9rem', fontWeight: 'bold' }}
+                                onClick={() => router.push(`/lecture_stats?classId=${classId}&lectureId=${lectureId}`)}
+                            >
+                                수강률 통계
+                            </ActionButton>
+                        </div>
+                    )}
                 </div>
 
                 <div className="side-card">

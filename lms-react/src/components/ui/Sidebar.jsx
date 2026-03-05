@@ -62,14 +62,6 @@ export default function Sidebar({ activeMenu }) {
                 {isAdmin ? 'Admin Menu' : isProf ? 'Professor Menu' : 'Student Menu'}
             </h3>
 
-            {/* 공통: 내 정보 (모두) */}
-            <div
-                className={`nav-item ${isActive('myInfo') ? 'active' : ''}`}
-                onClick={() => handleMenuClick('myInfo')}
-            >
-                내 정보
-            </div>
-
             {/* 역할별 분기 */}
             {isAdmin && (
                 <>
