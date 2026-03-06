@@ -38,6 +38,7 @@ const getDB = () => {
         enrollments: [],
         lecture_views: [],
         logs: [],
+        notifications: [],
     };
 
     localStorage.setItem(DB_KEY, JSON.stringify(initDB));
@@ -293,6 +294,21 @@ export const apiMock = {
             const newLecture = { id: generateId('l'), classId, title, description, youtubeLink, createdAt: Date.now() };
             db.lectures.push(newLecture);
             createLog(db, 'CREATE', 'lecture', newLecture.id, `새 강의("${title}")가 등록되었습니다.`, 'system', classId);
+
+            // 알림 생성: 수강 학생들에게 새 강의 알림
+            const students = db.enrollments.filter(e => e.classId === classId).map(e => e.studentId);
+            students.forEach(studentId => {
+                db.notifications.push({
+                    id: generateId('nt'),
+                    userId: studentId,
+                    type: 'NEW_LECTURE',
+                    message: `[${title}] 새로운 강의가 등록되었습니다.`,
+                    link: `/lecture?classId=${classId}&lectureId=${newLecture.id}`,
+                    isRead: false,
+                    createdAt: Date.now()
+                });
+            });
+
             saveDB(db);
             return newLecture;
         },
@@ -369,9 +385,25 @@ export const apiMock = {
         create: async (classId, authorId, title, content, isPrivate = false) => {
             await delay();
             const db = getDB();
+            if (!db.qnas) db.qnas = [];
             const newQna = { id: generateId('q'), classId, authorId, title, content, isPrivate, replies: [], createdAt: Date.now() };
             db.qnas.push(newQna);
             createLog(db, 'CREATE', 'qna', newQna.id, `새로운 질문("${title}")이 등록되었습니다.`, authorId, classId);
+
+            // 알림 생성: 교수자에게 새 질문 알림
+            const cls = db.classes.find(c => c.id === classId);
+            if (cls && cls.profId) {
+                db.notifications.push({
+                    id: generateId('nt'),
+                    userId: cls.profId,
+                    type: 'NEW_QNA',
+                    message: `[${cls.title}] 새로운 질문이 등록되었습니다: ${title}`,
+                    link: `/professor/class/${classId}?tab=qna`,
+                    isRead: false,
+                    createdAt: Date.now()
+                });
+            }
+
             saveDB(db);
             return newQna;
         },
@@ -379,18 +411,28 @@ export const apiMock = {
             await delay();
             const db = getDB();
             const qnaItem = db.qnas.find(q => q.id === qnaId);
-            if (!qnaItem) throw new Error('QnA 게시글을 찾을 수 없습니다.');
+            if (!qnaItem) throw new Error('해당 질문을 찾을 수 없습니다.');
 
             if (!qnaItem.replies) qnaItem.replies = [];
-            const newReply = {
-                id: generateId('rpl'),
-                authorId,
-                content,
-                createdAt: Date.now()
-            };
+            const newReply = { id: generateId('qr'), authorId, content, createdAt: Date.now() };
             qnaItem.replies.push(newReply);
 
             createLog(db, 'CREATE', 'qna_reply', qnaId, `질문("${qnaItem.title}")에 답변이 등록되었습니다.`, authorId, qnaItem.classId);
+
+            // 알림 생성: 질문 작성자에게 답변 알림 (답변자가 본인이 아닐 경우)
+            if (qnaItem.authorId !== authorId) {
+                db.notifications.push({
+                    id: generateId('nt'),
+                    userId: qnaItem.authorId,
+                    type: 'QNA_REPLY',
+                    message: `질문 [${qnaItem.title}]에 새로운 답변이 달렸습니다.`,
+                    // 역할에 따른 링크 분기 (알림 수신자의 역할을 알 수 없으므로 범용 링크 사용 권장하나, 여기선 간단히 처리)
+                    link: `/student/class/${qnaItem.classId}?tab=qna`,
+                    isRead: false,
+                    createdAt: Date.now()
+                });
+            }
+
             saveDB(db);
             return qnaItem;
         },
@@ -499,6 +541,42 @@ export const apiMock = {
             return (db.logs || [])
                 .filter(log => log.entityType === entityType && log.entityId === entityId)
                 .sort((a, b) => b.timestamp - a.timestamp);
+        }
+    },
+
+    // --- 알림 관리 ---
+    notifications: {
+        getAll: async (userId) => {
+            await delay();
+            const db = getDB();
+            return (db.notifications || [])
+                .filter(n => n.userId === userId)
+                .sort((a, b) => b.createdAt - a.createdAt);
+        },
+        getUnreadCount: async (userId) => {
+            await delay();
+            const db = getDB();
+            return (db.notifications || [])
+                .filter(n => n.userId === userId && !n.isRead).length;
+        },
+        markAsRead: async (notifId) => {
+            await delay();
+            const db = getDB();
+            const notif = db.notifications.find(n => n.id === notifId);
+            if (notif) {
+                notif.isRead = true;
+                saveDB(db);
+            }
+            return true;
+        },
+        markAllAsRead: async (userId) => {
+            await delay();
+            const db = getDB();
+            (db.notifications || [])
+                .filter(n => n.userId === userId && !n.isRead)
+                .forEach(n => n.isRead = true);
+            saveDB(db);
+            return true;
         }
     }
 };

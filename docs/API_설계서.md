@@ -26,7 +26,7 @@
 따라서, 프론트엔드 단의 비즈니스 로직(AuthContext, 각 컴포넌트 등)에서는 이 래퍼 구조를 전혀 신경 쓰지 않고 `api.auth.login` 혹은 `api.classes.getAll` 호출 시 목업(`api_mock.js`)과 **완전히 동일한 형태의 데이터**를 바로 넘겨받을 수 있습니다.
 
 ---
-> **총 39종 = 인증 2 + 유저 7 + 클래스 5 + 강의 5 + 자료 4 + QnA 5 + 수강 4 + 진도율 3 + 로그 3**
+> **총 44종 = 인증 2 + 유저 7 + 클래스 5 + 강의 5 + 자료 4 + QnA 5 + 수강 4 + 진도율 3 + 로그 3 + 알림 4**
 
 ### 1. 인증 (Authentication) — 2종
 | 기능 | 통신 URI | Method | Request Body | 응답 (data) |
@@ -101,5 +101,13 @@
 | 전체 로그 조회 | `/api/logs` | GET | None | `Log[]` |
 | 엔티티별 대상 로그 조회 | `/api/logs/:entityType/:entityId` | GET | Path: `entityType` (class, lecture, resource, qna, user), `entityId` | `Log[]` |
 | 활동 로그 생성 | `/api/logs` | POST | `{ action, entityType, entityId, message, actorId, classId(optional) }` | `Log` 객체 `{ id, action, entityType, entityId, message, actorId, classId, timestamp }` |
+
+### 10. 알림 관리 (Notifications) — 4종
+| 기능 | 통신 URI | Method | Request Body / Param | 응답 (data) |
+| :--- | :--- | :--- | :--- | :--- |
+| 사용자별 전체 알림 | `/api/notifications/user/:userId` | GET | Path: `userId` | `Notification[]` |
+| 읽지 않은 알림 수 | `/api/notifications/user/:userId/unread/count` | GET | Path: `userId` | `number` |
+| 단일 알림 읽음 처리 | `/api/notifications/:id/read` | PATCH | Path: `id` | `true` |
+| 전체 알림 읽음 처리 | `/api/notifications/user/:userId/read-all` | PATCH | Path: `userId` | `true` |
 
 

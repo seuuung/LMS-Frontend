@@ -180,5 +180,12 @@ export const apiReal = {
         getAll: async () => request('GET', '/api/logs'),
         getByEntity: async (entityType, entityId) => request('GET', `/api/logs/${entityType}/${entityId}`),
         create: async (action, entityType, entityId, message, actorId, classId = null) => request('POST', '/api/logs', { action, entityType, entityId, message, actorId, classId })
+    },
+    // --- 알림 관리 ---
+    notifications: {
+        getAll: async (userId) => request('GET', `/api/notifications/user/${userId}`),
+        getUnreadCount: async (userId) => request('GET', `/api/notifications/user/${userId}/unread/count`),
+        markAsRead: async (id) => request('PATCH', `/api/notifications/${id}/read`),
+        markAllAsRead: async (userId) => request('PATCH', `/api/notifications/user/${userId}/read-all`)
     }
 };

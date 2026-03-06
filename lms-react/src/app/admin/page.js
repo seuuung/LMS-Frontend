@@ -375,10 +375,9 @@ function AdminDashboard() {
                                             onClick={() => router.push(`/admin/class/${c.id}`)}
                                             actionButton={
                                                 <CardDropdownMenu
-                                                    itemId={c.id}
-                                                    activeDropdownId={activeDropdownId}
-                                                    setActiveDropdownId={setActiveDropdownId}
-                                                    menuItems={[
+                                                    isOpen={activeDropdownId === c.id}
+                                                    onToggle={() => setActiveDropdownId(activeDropdownId === c.id ? null : c.id)}
+                                                    items={[
                                                         { label: '강의정보수정', onClick: () => { setEditClassForm({ id: c.id, title: c.title, description: c.description || '' }); setIsEditClassModalOpen(true); } },
                                                         { label: '로그보기', onClick: () => { setLogModalContext({ entityType: 'class', entityId: c.id, title: `클래스 '${c.title}' 전체 활동 이력` }); } },
                                                         { label: '삭제', danger: true, onClick: () => handleDeleteClass(c.id) }
