@@ -90,6 +90,14 @@ export default function ProfessorDashboard() {
     };
 
     const handleCreateClass = async () => {
+        // --- 디버그 로깅: 생성 전 상태 확인 ---
+        console.log('[Debug] Class Creation Start', {
+            userId: user?.id,
+            userRole: user?.role,
+            newTitle,
+            newDesc
+        });
+
         if (!user || user.role !== 'prof') {
             showToast('권한이 없거나 유저 정보가 유실되었습니다. 다시 로그인해주세요.', 'error');
             return;

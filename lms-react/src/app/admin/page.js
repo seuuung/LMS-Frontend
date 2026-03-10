@@ -196,6 +196,13 @@ function AdminDashboard() {
     };
 
     const handleCreateClass = async () => {
+        // --- 디버그 로깅: 관리자 클래스 생성 확인 ---
+        console.log('[Debug] Admin Class Creation Start', {
+            currentUserRole: user?.role,
+            targetProfId: newClassProfId,
+            title: newClassTitle
+        });
+
         if (!user || user.role !== 'admin') {
             showToast('권한이 없거나 유저 정보가 유실되었습니다.', 'error');
             return;

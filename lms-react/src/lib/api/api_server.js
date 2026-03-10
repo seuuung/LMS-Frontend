@@ -32,6 +32,12 @@ const request = async (method, path, body = null) => {
     // 데이터가 있을 경우 JSON 문자열로 변환하여 바디에 포함
     if (body) options.body = JSON.stringify(body);
 
+    // --- 디버그 로깅: 요청 정보 ---
+    console.log(`[API Request] %c${method} %c${path}`, 'color: blue; font-weight: bold;', 'color: inherit;', {
+        body,
+        options
+    });
+
     try {
         const response = await fetch(`${BASE_URL}${path}`, options);
 
@@ -39,6 +45,12 @@ const request = async (method, path, body = null) => {
         if (response.status === 204) return null;
 
         const responseData = await response.json();
+
+        // --- 디버그 로깅: 응답 및 처리 결과 ---
+        console.log(`[API Response] %c${path}`, 'color: green; font-weight: bold;', {
+            status: response.status,
+            data: responseData
+        });
 
         // HTTP 상태 코드가 200-299 범위가 아닌 경우 에러 처리
         if (!response.ok) {
