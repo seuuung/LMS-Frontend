@@ -52,7 +52,8 @@ const request = async (method, path, body = null) => {
                 throw new Error(responseData.error || 'API 요청 실패');
             }
             // success가 true이면 data 객체 안의 알맹이만 반환
-            return responseData.data;
+            // 데이터가 null일 경우 빈 객체나 null을 안전하게 반환하도록 보장
+            return responseData.data !== undefined ? responseData.data : responseData;
         }
 
         // 공통 포맷이 아닐 경우(예외 처리) 전체 데이터 반환

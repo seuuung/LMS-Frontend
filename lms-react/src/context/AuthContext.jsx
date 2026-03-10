@@ -90,9 +90,21 @@ export function AuthProvider({ children }) {
 
     // 사용자 정보 업데이트 (정보 수정 후 컨텍스트 및 로컬스토리지 반영)
     const updateUser = (updates) => {
-        const updatedUser = { ...user, ...updates };
-        setUser(updatedUser);
-        localStorage.setItem('lms_current_user', JSON.stringify(updatedUser));
+        if (!updates) return;
+        
+        // 기존 유저 정보가 있을 경우에만 업데이트 진행 (id, role 등 필수 필드 유실 방지)
+        setUser(prevUser => {
+            const newUser = { ...prevUser, ...updates };
+            // 만약 필수 필드(role)가 업데이트 과정에서 소실된다면 기존값 유지
+            if (prevUser && !newUser.role) {
+                newUser.role = prevUser.role;
+            }
+            if (prevUser && !newUser.id) {
+                newUser.id = prevUser.id;
+            }
+            localStorage.setItem('lms_current_user', JSON.stringify(newUser));
+            return newUser;
+        });
     };
 
     return (

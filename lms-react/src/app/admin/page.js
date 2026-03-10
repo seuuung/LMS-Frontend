@@ -73,6 +73,9 @@ function AdminDashboard() {
 
     // --- 데이터 초기화 및 패칭 ---
     useEffect(() => {
+        // 유저 정보가 없으면 로직을 실행하지 않음 (AuthContext 복구 대기)
+        if (!user) return;
+        
         if (!requireAuth(['admin'])) return;
 
         const tab = searchParams.get('tab') || searchParams.get('t');
@@ -189,6 +192,10 @@ function AdminDashboard() {
     };
 
     const handleCreateClass = async () => {
+        if (!user || user.role !== 'admin') {
+            showToast('권한이 없거나 유저 정보가 유실되었습니다.', 'error');
+            return;
+        }
         if (!newClassTitle.trim()) return showToast('클래스 제목을 입력하세요.', 'error');
         if (!newClassProfId) return showToast('담당 교수자를 선택하세요.', 'error');
 

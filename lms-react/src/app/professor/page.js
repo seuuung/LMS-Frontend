@@ -58,6 +58,9 @@ export default function ProfessorDashboard() {
 
     // --- 사이드 이펙트 ---
     useEffect(() => {
+        // 유저 정보가 없으면 로직을 실행하지 않음 (AuthContext 복구 대기)
+        if (!user) return;
+        
         if (!requireAuth(['prof'])) return;
         loadMyClasses();
 
@@ -87,6 +90,10 @@ export default function ProfessorDashboard() {
     };
 
     const handleCreateClass = async () => {
+        if (!user || user.role !== 'prof') {
+            showToast('권한이 없거나 유저 정보가 유실되었습니다. 다시 로그인해주세요.', 'error');
+            return;
+        }
         if (!newTitle) {
             showToast('제목을 입력하세요', 'error');
             return;
