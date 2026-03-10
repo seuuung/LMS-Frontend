@@ -90,18 +90,22 @@ function AdminDashboard() {
      * 유저 목록과 전체 클래스 목록을 동시에 요청하여 상태에 반영합니다.
      */
     const loadData = async () => {
-        try {
-            const [users, classes, logsData] = await Promise.all([
-                api.users.getAll(),
-                api.classes.getAll(),
-                api.logs.getAll()
-            ]);
-            setAllUsers(users);
-            setAllClasses(classes);
-            setLogs(logsData || []);
-        } catch (err) {
-            showToast(err.message, 'error');
-        }
+        // 개별 요청을 위한 헬퍼 함수
+        const fetchData = async (apiCall, setter, errorLabel) => {
+            try {
+                const data = await apiCall();
+                setter(data || []);
+            } catch (err) {
+                showToast(`${errorLabel} 로드 실패: ${err.message}`, 'error');
+            }
+        };
+
+        // 병렬로 개별 요청 실행 (하나가 실패해도 나머지에 영향 없음)
+        await Promise.allSettled([
+            fetchData(api.users.getAll, setAllUsers, '사용자 목록'),
+            fetchData(api.classes.getAll, setAllClasses, '클래스 목록'),
+            fetchData(api.logs.getAll, setLogs, '활동 로그')
+        ]);
     };
 
 
