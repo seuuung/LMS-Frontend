@@ -91,7 +91,7 @@ export function AuthProvider({ children }) {
     // 사용자 정보 업데이트 (정보 수정 후 컨텍스트 및 로컬스토리지 반영)
     const updateUser = (updates) => {
         if (!updates) return;
-        
+
         // 기존 유저 정보가 있을 경우에만 업데이트 진행 (id, role 등 필수 필드 유실 방지)
         setUser(prevUser => {
             const newUser = { ...prevUser, ...updates };
@@ -99,8 +99,8 @@ export function AuthProvider({ children }) {
             if (prevUser && !newUser.role) {
                 newUser.role = prevUser.role;
             }
-            if (prevUser && !newUser.id) {
-                newUser.id = prevUser.id;
+            if (prevUser && !newUser.userId) {
+                newUser.userId = prevUser.userId;
             }
             localStorage.setItem('lms_current_user', JSON.stringify(newUser));
             return newUser;
