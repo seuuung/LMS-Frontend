@@ -204,7 +204,7 @@ function AdminDashboard() {
         if (!newClassProfId) return showToast('담당 교수자를 선택하세요.', 'error');
 
         try {
-            await api.classes.create(newClassTitle.trim(), newClassDesc.trim(), newClassProfId);
+            await api.classes.create(newClassTitle.trim(), newClassDesc.trim(), newClassProfId, user.role);
             showToast('클래스가 생성되었습니다.', 'success');
             setIsCreatingClass(false);
             setNewClassTitle('');

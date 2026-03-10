@@ -108,7 +108,7 @@ export const apiReal = {
     classes: {
         getAll: async () => request('GET', '/api/classes'),
         getById: async (id) => request('GET', `/api/classes/${id}`),
-        create: async (title, desc, profId) => request('POST', '/api/classes', { title, description: desc, profId }),
+        create: async (title, desc, profId, role) => request('POST', '/api/classes', { title, description: desc, profId, role }),
         update: async (id, updates) => request('PATCH', `/api/classes/${id}`, updates),
         delete: async (id) => request('DELETE', `/api/classes/${id}`)
     },

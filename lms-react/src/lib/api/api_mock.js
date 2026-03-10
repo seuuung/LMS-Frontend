@@ -240,7 +240,7 @@ export const apiMock = {
             await delay();
             return getDB().classes.find(c => c.id === classId);
         },
-        create: async (title, description, profId) => {
+        create: async (title, description, profId, role) => {
             await delay();
             const db = getDB();
             const enrollmentCode = Math.random().toString(36).substring(2, 8).toUpperCase();

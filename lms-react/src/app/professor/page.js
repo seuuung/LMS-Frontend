@@ -99,7 +99,7 @@ export default function ProfessorDashboard() {
             return;
         }
         try {
-            await api.classes.create(newTitle, newDesc, user.id);
+            await api.classes.create(newTitle, newDesc, user.id, user.role);
             showToast('클래스가 생성되었습니다.', 'success');
             setNewTitle('');
             setNewDesc('');
