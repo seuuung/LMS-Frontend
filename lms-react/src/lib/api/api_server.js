@@ -60,12 +60,19 @@ const request = async (method, path, body = null) => {
         // 백엔드 공통 응답 포맷({ success, data, error }) 처리
         if (responseData && typeof responseData.success === 'boolean') {
             if (!responseData.success) {
+                console.warn(`[API Payload Error] ${path}:`, responseData.error);
                 // success가 false이면 error 필드를 메시지로 사용
                 throw new Error(responseData.error || 'API 요청 실패');
             }
             // success가 true이면 data 객체 안의 알맹이만 반환
-            // 데이터가 null일 경우 빈 객체나 null을 안전하게 반환하도록 보장
-            return responseData.data !== undefined ? responseData.data : responseData;
+            // 단, data 필드가 명시적으로 존재하는지(빈 문자열이나 0, false도 유효함) 확인
+            if ('data' in responseData) {
+                console.log(`[API Unwrapped Data] ${path} ->`, responseData.data);
+                return responseData.data;
+            } else {
+                console.log(`[API Raw Data Fallback] ${path} ->`, responseData);
+                return responseData;
+            }
         }
 
         // 공통 포맷이 아닐 경우(예외 처리) 전체 데이터 반환
