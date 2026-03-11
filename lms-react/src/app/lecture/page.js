@@ -67,7 +67,7 @@ function LectureView() {
     const loadData = async () => {
         try {
             const lectures = await api.lectures.getByClass(classId);
-            const targetLec = lectures.find(l => l.id === lectureId);
+            const targetLec = lectures.find(l => String(l.id) === String(lectureId));
             if (!targetLec) {
                 showToast('강의를 찾을 수 없습니다.', 'error');
                 router.back();
