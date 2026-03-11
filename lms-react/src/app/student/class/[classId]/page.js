@@ -138,6 +138,22 @@ export default function StudentClassDashboard() {
                     <div id="learningArea">
                         <TabBar tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
+                        {/* 클래스 소개 탭 */}
+                        {activeTab === 'info' && (
+                            <div style={{ padding: '1.5rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', minHeight: '150px', marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <h4 style={{ margin: 0, color: 'var(--primary-color)' }}>강좌 소개</h4>
+                                </div>
+                                {currentClass.description ? (
+                                    <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6', color: 'var(--text-color)' }}>
+                                        {currentClass.description}
+                                    </p>
+                                ) : (
+                                    <p style={{ color: 'var(--text-muted)' }}>등록된 소개 내용이 없습니다.</p>
+                                )}
+                            </div>
+                        )}
+
                         {/* 강의 탭 */}
                         {activeTab === 'lec' && (
                             <div>
