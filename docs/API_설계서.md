@@ -44,14 +44,14 @@
 ### 1. 인증 (Authentication) — 2종
 | 기능 | 통신 URI | Method | Request Body | 응답 (data) |
 | :--- | :--- | :--- | :--- | :--- |
-| 로그인 | `/api/auth/login` | POST | `{ username, password }` | `{ id, username, name, role, createdAt, updatedAt }` |
-| 회원가입 | `/api/auth/register` | POST | `{ username, password, name, role }` | `{ id, username, name, role }` |
+| 로그인 | `/api/auth/login` | POST | `{ username, password }` | `{ userId, username, name, role, createdAt, updatedAt }` |
+| 회원가입 | `/api/auth/register` | POST | `{ username, password, name, role }` | `{ userId, username, name, role }` |
 
 ### 2. 유저 관리 (Users) — 7종
 | 기능 | 통신 URI | Method | Request Body / Param | 응답 (data) |
 | :--- | :--- | :--- | :--- | :--- |
 | 전체 유저 | `/api/users` | GET | None | `User[]` (아래 단일 유저 객체 배열) |
-| 단일 유저 | `/api/users/:id` | GET | Path: `id` | `{ id, username, name, role, createdAt, updatedAt }` |
+| 단일 유저 | `/api/users/:id` | GET | Path: `id` | `{ userId, username, name, role, createdAt, updatedAt }` |
 | 유저 정보 수정 | `/api/users/:id` | PATCH | `updates` (변경 항목 객체: name 등) | `User` 객체 |
 | 유저 비밀번호 수정 | `/api/users/:id/password` | PATCH | `{ currentPassword, password }` | `true` |
 | 역할 변경 | `/api/users/:id/role` | PATCH | `{ role }` | `true` |
@@ -76,11 +76,12 @@
 | 정보 수정 | `/api/lectures/:id` | PATCH | `updates` (변경 항목 객체) | `Lecture` 객체 |
 | 강의 삭제 | `/api/lectures/:id` | DELETE | Path: `id` | (없음, 성공 시 204 처리) |
 
-### 5. 자료실 관리 (Resources) — 4종
+### 5. 자료실 관리 (Resources) — 5종
 | 기능 | 통신 URI | Method | Request Body / Param | 응답 (data) |
 | :--- | :--- | :--- | :--- | :--- |
 | 과목별 목록 | `/api/classes/:classId/resources` | GET | Path: `classId` | `Resource[]` |
-| 등록 | `/api/resources` | POST | `{ classId, title, description, filename, lectureId }` | `{ id, classId, lectureId, title, description, filename, createdAt }` |
+| 파일 다운로드| `/api/resources/download/:id`   | GET | Path: `id` | `Blob` (바이트 스트림) |
+| 등록 | `/api/resources` | POST | `FormData` (classId, title(선택), description, file, lectureId) | `{ id, classId, lectureId, title, description, filename, createdAt }` |
 | 자료 수정 | `/api/resources/:id` | PATCH | `updates` (변경 항목 객체: title, description 등) | `Resource` 객체 |
 | 자료 삭제 | `/api/resources/:id` | DELETE | Path: `id` | (없음, 성공 시 204 처리) |
 

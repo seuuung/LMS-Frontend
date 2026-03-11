@@ -171,12 +171,13 @@ export default function AdminClassDashboard() {
     };
 
     const handleCreateResource = async ({ title, desc, file }) => {
-        if (!title || !file) {
-            showToast('제목과 파일을 선택하세요.', 'error');
+        if (!file) {
+            showToast('파일을 선택하세요.', 'error');
             return;
         }
+        const finalTitle = title.trim() || file.name.split('.')[0];
         try {
-            await api.resources.create(classId, title, desc, file.name);
+            await api.resources.create(classId, finalTitle, desc, file);
             showToast('자료가 등록되었습니다.', 'success');
             setIsResFormOpen(false);
             loadData('res');
@@ -353,7 +354,18 @@ export default function AdminClassDashboard() {
                                         onCancel={() => setIsResFormOpen(false)}
                                     />
                                 )}
-                                <ResourceList resources={resources} onDelete={handleDeleteResource} />
+                                <ResourceList 
+                                    resources={resources} 
+                                    onDelete={handleDeleteResource}
+                                    onDownload={async (r) => {
+                                        try {
+                                            showToast(`[${r.filename}] 다운로드를 시작합니다.`, 'success');
+                                            await api.resources.download(r.id, r.filename);
+                                        } catch (err) {
+                                            showToast(err.message || '다운로드에 실패했습니다.', 'error');
+                                        }
+                                    }}
+                                />
                             </div>
                         )}
 

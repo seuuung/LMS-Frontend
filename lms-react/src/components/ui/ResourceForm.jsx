@@ -30,7 +30,7 @@ export default function ResourceForm({ onSubmit, onCancel }) {
         <div style={{ marginTop: '1rem', background: '#f1f5f9', padding: '1rem', borderRadius: '8px' }}>
             <div className="form-group">
                 <label className="form-label">자료 제목</label>
-                <input type="text" className="form-control" value={title} onChange={e => setTitle(e.target.value)} />
+                <input type="text" className="form-control" value={title} onChange={e => setTitle(e.target.value)} placeholder="선택사항 (미입력 시 파일명으로 자동 지정)" />
             </div>
             <div className="form-group" style={{ marginTop: '0.5rem' }}>
                 <label className="form-label">자료 설명</label>

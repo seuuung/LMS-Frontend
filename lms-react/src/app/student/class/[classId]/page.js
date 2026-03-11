@@ -179,7 +179,14 @@ export default function StudentClassDashboard() {
                                 <h4>자료 목록</h4>
                                 <ResourceList
                                     resources={resources}
-                                    onDownload={(r) => showToast(`[${r.filename}] 다운로드를 시작합니다.`, 'success')}
+                                    onDownload={async (r) => {
+                                        try {
+                                            showToast(`[${r.filename}] 다운로드를 시작합니다.`, 'success');
+                                            await api.resources.download(r.id, r.filename);
+                                        } catch (err) {
+                                            showToast(err.message || '다운로드에 실패했습니다.', 'error');
+                                        }
+                                    }}
                                 />
                             </div>
                         )}

@@ -19,18 +19,21 @@ const BASE_URL = 'http://localhost:8080';
  * @param {object} body - 요청 바디 데이터 (optional)
  */
 const request = async (method, path, body = null) => {
+    const isFormData = body instanceof FormData;
     const options = {
         method,
         headers: {
-            'Content-Type': 'application/json',
+            ...(!isFormData && { 'Content-Type': 'application/json' }),
             'Accept': 'application/json',
             // 인증이 필요한 경우 아래 주석을 해제하고 토큰을 설정하세요.
             // 'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
     };
 
-    // 데이터가 있을 경우 JSON 문자열로 변환하여 바디에 포함
-    if (body) options.body = JSON.stringify(body);
+    // 데이터가 있을 경우 JSON 문자열 또는 FormData 객체 형태로 바디에 포함
+    if (body) {
+        options.body = isFormData ? body : JSON.stringify(body);
+    }
 
     // --- 디버그 로깅: 요청 정보 ---
     console.log(`[API Request] %c${method} %c${path}`, 'color: blue; font-weight: bold;', 'color: inherit;', {
@@ -60,19 +63,12 @@ const request = async (method, path, body = null) => {
         // 백엔드 공통 응답 포맷({ success, data, error }) 처리
         if (responseData && typeof responseData.success === 'boolean') {
             if (!responseData.success) {
-                console.warn(`[API Payload Error] ${path}:`, responseData.error);
                 // success가 false이면 error 필드를 메시지로 사용
                 throw new Error(responseData.error || 'API 요청 실패');
             }
             // success가 true이면 data 객체 안의 알맹이만 반환
-            // 단, data 필드가 명시적으로 존재하는지(빈 문자열이나 0, false도 유효함) 확인
-            if ('data' in responseData) {
-                console.log(`[API Unwrapped Data] ${path} ->`, responseData.data);
-                return responseData.data;
-            } else {
-                console.log(`[API Raw Data Fallback] ${path} ->`, responseData);
-                return responseData;
-            }
+            // 데이터가 null일 경우 빈 객체나 null을 안전하게 반환하도록 보장
+            return responseData.data !== undefined ? responseData.data : responseData;
         }
 
         // 공통 포맷이 아닐 경우(예외 처리) 전체 데이터 반환
@@ -160,9 +156,42 @@ export const apiReal = {
          */
         getByClass: async (classId) => request('GET', `/api/classes/${classId}/resources`),
         /**
-         * 새 학습 자료 등록
+         * 새 학습 자료 등록 (Multipart form 형식 지원)
          */
-        create: async (classId, title, desc, filename, lectureId) => request('POST', '/api/resources', { classId, title, description: desc, filename, lectureId }),
+        create: async (classId, title, desc, fileObj, lectureId) => {
+            const formData = new FormData();
+            formData.append('classId', classId);
+            formData.append('title', title);
+            if (desc) formData.append('description', desc);
+            if (lectureId) formData.append('lectureId', lectureId);
+            formData.append('file', fileObj); 
+            
+            return request('POST', '/api/resources', formData);
+        },
+        /**
+         * 단일 파일(자료) 다운로드
+         */
+        download: async (id, filename) => {
+            const url = `${BASE_URL}/api/resources/download/${id}`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    // 필요 시 'Authorization': `Bearer ...` 추가
+                }
+            });
+            
+            if (!response.ok) throw new Error(`다운로드에 실패했습니다. (${response.status})`);
+            
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = filename || 'downloaded_file';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
+        },
         update: async (id, updates) => request('PATCH', `/api/resources/${id}`, updates),
         delete: async (id) => request('DELETE', `/api/resources/${id}`)
     },

@@ -325,7 +325,7 @@ function LectureView() {
         if (!resFile) return showToast('파일을 선택하세요.', 'error');
         try {
             const title = `[자료] ${resFile.name.split('.')[0]}`;
-            await api.resources.create(classId, title, '강의 첨부자료', resFile.name, lectureId);
+            await api.resources.create(classId, title, '강의 첨부자료', resFile, lectureId);
             showToast('새 자료가 추가되었습니다.', 'success');
             setResFile(null);
 
@@ -430,7 +430,14 @@ function LectureView() {
                                     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, paddingRight: '1rem' }}>
                                         <strong style={{ color: 'var(--text-main)', fontSize: '0.95rem' }}>{r.title}</strong>
                                         <small style={{ color: 'var(--text-muted)', marginTop: '0.2rem' }}>{r.filename}</small>
-                                        <button className="btn" onClick={() => showToast(`[${r.filename}] 다운로드를 시작합니다.`, 'success')} style={{ alignSelf: 'flex-start', marginTop: '0.7rem', fontSize: '0.8rem', padding: '0.3rem 0.7rem', background: '#eff6ff', color: '#3b82f6', borderRadius: '6px', textDecoration: 'none', fontWeight: 600 }}>다운로드</button>
+                                        <button className="btn" onClick={async () => {
+                                            try {
+                                                showToast(`[${r.filename}] 다운로드를 시작합니다.`, 'success');
+                                                await api.resources.download(r.id, r.filename);
+                                            } catch (err) {
+                                                showToast(err.message || '다운로드에 실패했습니다.', 'error');
+                                            }
+                                        }} style={{ alignSelf: 'flex-start', marginTop: '0.7rem', fontSize: '0.8rem', padding: '0.3rem 0.7rem', background: '#eff6ff', color: '#3b82f6', borderRadius: '6px', textDecoration: 'none', fontWeight: 600 }}>다운로드</button>
                                     </div>
                                     {isInstructorMode && (
                                         <button onClick={() => handleDeleteResource(r.id)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: '#fef2f2', border: 'none', color: '#ef4444', cursor: 'pointer', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', transition: 'background 0.2s' }}>

@@ -17,21 +17,23 @@ export default function ResourceList({ resources, onDelete, onDownload }) {
             ) : (
                 resources.map(r => (
                     <div className="list-item" key={r.id}>
-                        <span>{r.title} <small>({r.filename})</small></span>
-                        {/* 관리자/교수자 권한이 있는 경우에만 삭제 버튼 노출 */}
-                        {onDelete && (
-                            <button className="action-btn del" onClick={() => onDelete(r.id)}>삭제</button>
-                        )}
-                        {/* 학생 권한(다운로드 핸들러 전달됨)이 있는 경우에만 다운로드 버튼 노출 */}
-                        {onDownload && (
-                            <button
-                                className="btn btn-primary"
-                                style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }}
-                                onClick={() => onDownload(r)}
-                            >
-                                다운로드
-                            </button>
-                        )}
+                        <span style={{ flex: 1, marginRight: '1rem' }}>{r.title} <small>({r.filename})</small></span>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            {/* 관리자/교수자 권한이 있는 경우에만 삭제 버튼 노출 */}
+                            {onDelete && (
+                                <button className="action-btn del" onClick={() => onDelete(r.id)}>삭제</button>
+                            )}
+                            {/* 학생 권한(다운로드 핸들러 전달됨)이 있는 경우에만 다운로드 버튼 노출 */}
+                            {onDownload && (
+                                <button
+                                    className="btn btn-primary"
+                                    style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }}
+                                    onClick={() => onDownload(r)}
+                                >
+                                    다운로드
+                                </button>
+                            )}
+                        </div>
                     </div>
                 ))
             )}

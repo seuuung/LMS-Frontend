@@ -345,14 +345,29 @@ export const apiMock = {
             await delay();
             return getDB().resources.filter(r => r.classId === classId);
         },
-        create: async (classId, title, description, filename, lectureId = null) => {
+        create: async (classId, title, description, fileObj, lectureId = null) => {
             await delay();
             const db = getDB();
+            // Mock에서는 File 객체에서 이름만 추출하여 가짜 데이터로 씁니다.
+            const filename = fileObj ? fileObj.name : 'mock_file.ext';
             const newRes = { id: generateId('r'), classId, lectureId, title, description, filename, createdAt: Date.now() };
             db.resources.push(newRes);
             createLog(db, 'CREATE', 'resource', newRes.id, `새로운 학습 자료("${title}")가 등록되었습니다.`, 'system', classId);
             saveDB(db);
             return newRes;
+        },
+        download: async (id, filename) => {
+            await delay();
+            // Mock API에서는 실제 파일 소스가 없으므로 더미 텍스트 파일로 브라우저 다운로드를 테스트합니다.
+            const blob = new Blob(['이 파일은 Mock API 모드에서 테스트용으로 생성된 더미 콘텐츠입니다.'], { type: 'text/plain' });
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = filename || `mock_download_${id}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(downloadUrl);
         },
         update: async (id, updates) => {
             await delay();
