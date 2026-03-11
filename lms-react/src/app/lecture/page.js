@@ -80,7 +80,7 @@ function LectureView() {
             // Student progress logic
             if (user.role === 'student') {
                 const views = await api.lectureViews.getByClassAndStudent(classId, user.userId);
-                const viewInfo = views.find(v => v.lectureId === lectureId);
+                const viewInfo = views.find(v => String(v.lectureId) === String(lectureId));
                 const rate = viewInfo ? (viewInfo.progressRate || 0) : 0;
                 currentRateRef.current = rate;
                 setProgressRate(rate);

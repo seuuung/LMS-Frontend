@@ -147,7 +147,7 @@ export default function StudentClassDashboard() {
                                         <EmptyState message="업로드된 강의가 없습니다." />
                                     ) : (
                                         lectures.map(l => {
-                                            const viewInfo = views.find(v => v.lectureId === l.id);
+                                            const viewInfo = views.find(v => String(v.lectureId) === String(l.id));
                                             const currentRate = viewInfo ? (viewInfo.progressRate || 0) : 0;
                                             return (
                                                 <div className="list-item" key={l.id}>
