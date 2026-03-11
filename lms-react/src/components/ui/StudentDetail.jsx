@@ -48,11 +48,11 @@ export default function StudentDetail({ classId, studentId, backPath, allowedRol
                 return;
             }
 
-            const targetStudent = users.find(u => u.userId === studentId);
+            const targetStudent = users.find(u => String(u.userId) === String(studentId));
             setStudent(targetStudent || { id: studentId, name: studentId });
             setCurrentClass(cls);
             setLectures(fetchedLectures);
-            setViews(fetchedViews.filter(v => v.studentId === studentId));
+            setViews(fetchedViews.filter(v => String(v.studentId) === String(studentId)));
         } catch (err) {
             showToast(err.message || '데이터를 불러오는 데 실패했습니다.', 'error');
         } finally {
