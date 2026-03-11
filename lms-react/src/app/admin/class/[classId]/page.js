@@ -288,7 +288,7 @@ export default function AdminClassDashboard() {
                         <span>담당 교수: <strong style={{ marginLeft: '0.5rem' }}>{allUsers.find(u => u.userId === currentClass.profId)?.name || '미지정'}</strong></span>
                         <select className="form-control" style={{ width: 'auto', marginLeft: '1rem', padding: '0.3rem 0.5rem', fontSize: '0.9rem' }} value={selectedProfId} onChange={e => setSelectedProfId(e.target.value)}>
                             {profs.map(p => (
-                                <option key={p.id} value={p.id}>{p.name}</option>
+                                <option key={p.userId} value={p.userId}>{p.name}</option>
                             ))}
                         </select>
                         <button className="btn" style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '0.3rem 0.6rem', fontSize: '0.9rem' }} onClick={handleChangeProf}>변경</button>

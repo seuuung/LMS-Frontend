@@ -18,8 +18,8 @@ export function useNotifications() {
         if (!user) return;
         try {
             const [list, count] = await Promise.all([
-                api.notifications.getAll(user.userId),
-                api.notifications.getUnreadCount(user.userId)
+                api.notifications.getAll(user.userId, { skipLoading: true }),
+                api.notifications.getUnreadCount(user.userId, { skipLoading: true })
             ]);
             setNotifications(list);
             setUnreadCount(count);
