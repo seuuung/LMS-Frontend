@@ -52,6 +52,10 @@ export default function StudentDetail({ classId, studentId, backPath, allowedRol
             setStudent(targetStudent || { id: studentId, name: studentId });
             setCurrentClass(cls);
             setLectures(fetchedLectures);
+            
+            // --- 디버깅용 로그 삽입 ---
+            console.log('[StudentDetail Debug] 백엔드에서 받은 views 원본:', fetchedViews);
+            
             setViews(fetchedViews);
         } catch (err) {
             showToast(err.message || '데이터를 불러오는 데 실패했습니다.', 'error');
@@ -67,14 +71,14 @@ export default function StudentDetail({ classId, studentId, backPath, allowedRol
     let avgProgress = 0;
     if (lectures.length > 0) {
         const totalRate = lectures.reduce((sum, lec) => {
-            const view = views.find(v => v.lectureId === lec.id);
+            const view = views.find(v => String(v.lectureId) === String(lec.id));
             return sum + (view ? (view.progressRate || 0) : 0);
         }, 0);
         avgProgress = Math.round(totalRate / lectures.length);
     }
 
     const completedCount = lectures.filter(lec => {
-        const view = views.find(v => v.lectureId === lec.id);
+        const view = views.find(v => String(v.lectureId) === String(lec.id));
         return view && view.progressRate >= 95;
     }).length;
 
@@ -125,7 +129,7 @@ export default function StudentDetail({ classId, studentId, backPath, allowedRol
                             </thead>
                             <tbody>
                                 {lectures.map((lec, idx) => {
-                                    const view = views.find(v => v.lectureId === lec.id);
+                                    const view = views.find(v => String(v.lectureId) === String(lec.id));
                                     const rate = view ? (view.progressRate || 0) : 0;
 
                                     return (
