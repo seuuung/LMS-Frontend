@@ -63,7 +63,7 @@ function LectureStats() {
             );
 
             const calculatedStats = enrolledUsers.map(u => {
-                const view = allViews.find(v => v.lectureId === lectureId && v.studentId === u.userId);
+                const view = allViews.find(v => String(v.lectureId) === String(lectureId) && String(v.studentId) === String(u.userId));
                 const rate = view ? (view.progressRate || 0) : 0;
                 return {
                     user: u,
