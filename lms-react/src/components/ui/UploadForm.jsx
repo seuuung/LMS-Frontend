@@ -39,7 +39,7 @@ export default function UploadForm({ classId, allowedRoles, basePath }) {
 
         // 2. 클래스 정보를 가져와 실제 해당 클래스의 담당 교수인지(관리자가 아닌 경우) 추가 검증
         api.classes.getById(classId).then(cls => {
-            if (!cls || (user.role !== 'admin' && cls.profId !== user.id)) {
+            if (!cls || (user.role !== 'admin' && cls.profId !== user.userId)) {
                 showToast('해당 클래스에 접근할 권한이 없거나 존재하지 않는 클래스입니다.', 'error');
                 router.push(basePath);
                 return;

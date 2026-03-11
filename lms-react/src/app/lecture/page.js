@@ -79,7 +79,7 @@ function LectureView() {
 
             // Student progress logic
             if (user.role === 'student') {
-                const views = await api.lectureViews.getByClassAndStudent(classId, user.id);
+                const views = await api.lectureViews.getByClassAndStudent(classId, user.userId);
                 const viewInfo = views.find(v => v.lectureId === lectureId);
                 const rate = viewInfo ? (viewInfo.progressRate || 0) : 0;
                 currentRateRef.current = rate;
@@ -263,7 +263,7 @@ function LectureView() {
                     currentRateRef.current = percent;
 
                     // 상태 업데이트 및 API 호출 (로딩 UI는 무거운 업데이트이므로 스킵)
-                    await api.lectureViews.updateProgress(classId, lectureId, user.id, percent, currentTime, { skipLoading: true });
+                    await api.lectureViews.updateProgress(classId, lectureId, user.userId, percent, currentTime, { skipLoading: true });
                     setProgressRate(percent);
                 }
             } catch (e) {

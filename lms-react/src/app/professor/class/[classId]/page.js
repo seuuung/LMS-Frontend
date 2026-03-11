@@ -181,7 +181,7 @@ export default function ProfessorClassDashboard() {
 
     const handleCreateQna = async (title, content, isPrivate) => {
         try {
-            await api.qnas.create(classId, user.id, title, content, isPrivate);
+            await api.qnas.create(classId, user.userId, title, content, isPrivate);
             showToast('게시글이 등록되었습니다.', 'success');
             loadData('qna');
         } catch (err) {
@@ -413,16 +413,16 @@ export default function ProfessorClassDashboard() {
                         <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>검색 결과가 없습니다.</p>
                     ) : (
                         studentSearchResults.map(student => {
-                            const isEnrolled = enrolls.some(e => e.studentId === student.id);
+                            const isEnrolled = enrolls.some(e => e.studentId === student.userId);
                             return (
-                                <div className="list-item" key={student.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div className="list-item" key={student.userId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
                                         <strong>{student.name}</strong> <small style={{ color: 'var(--text-muted)' }}>({student.username})</small>
                                     </div>
                                     <button
                                         className="btn"
                                         style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', background: isEnrolled ? '#e2e8f0' : '#3b82f6', color: isEnrolled ? '#64748b' : '#fff', cursor: isEnrolled ? 'not-allowed' : 'pointer', border: 'none' }}
-                                        onClick={() => !isEnrolled && handleAddStudent(student.id)}
+                                        onClick={() => !isEnrolled && handleAddStudent(student.userId)}
                                         disabled={isEnrolled}
                                     >
                                         {isEnrolled ? '등록됨' : '등록'}

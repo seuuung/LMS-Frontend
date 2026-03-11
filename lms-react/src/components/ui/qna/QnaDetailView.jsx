@@ -13,12 +13,12 @@ export default function QnaDetailView({ qna, authorName, allUsers, currentUser, 
      */
     const handleReplySubmit = () => {
         if (!replyContent.trim()) return;
-        onAddReply(qna.id, currentUser.id, replyContent);
+        onAddReply(qna.id, currentUser.userId, replyContent);
         setReplyContent('');
     };
 
     // 삭제 권한: 작성자 본인이거나 관리자(admin)인 경우 허용
-    const canDelete = qna.authorId === currentUser?.id || currentUser?.role === 'admin';
+    const canDelete = qna.authorId === currentUser?.userId || currentUser?.role === 'admin';
 
     return (
         <div className="qna-detail-view">
@@ -76,7 +76,7 @@ export default function QnaDetailView({ qna, authorName, allUsers, currentUser, 
                     </p>
                 ) : (
                     qna.replies.map(reply => {
-                        const rAuthor = allUsers.find(u => u.id === reply.authorId);
+                        const rAuthor = allUsers.find(u => u.userId === reply.authorId);
                         const rAuthorName = rAuthor ? rAuthor.name : reply.authorId;
                         const roleLabel = rAuthor?.role === 'admin' ? '관리자' : rAuthor?.role === 'prof' ? '교수자' : '';
                         return (

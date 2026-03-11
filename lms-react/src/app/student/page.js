@@ -82,7 +82,7 @@ export default function StudentDashboard() {
 
             const [fetchedAllClasses, fetchedMyEnrolls, fetchedAllUsers] = await Promise.all([
                 api.classes.getAll(),
-                api.enrollments.getByStudent(user.id),
+                api.enrollments.getByStudent(user.userId),
                 api.users.getAll()
             ]);
 
@@ -110,7 +110,7 @@ export default function StudentDashboard() {
             return;
         }
         try {
-            await api.enrollments.joinWithCode(enrollmentCode, user.id);
+            await api.enrollments.joinWithCode(enrollmentCode, user.userId);
             showToast('수강 신청이 완료되었습니다.', 'success');
             setEnrollmentCode('');
             loadData(); // Reload data to update UI
@@ -137,7 +137,7 @@ export default function StudentDashboard() {
             return;
         }
         try {
-            await api.enrollments.joinWithCode(modalEnrollCode, user.id);
+            await api.enrollments.joinWithCode(modalEnrollCode, user.userId);
             showToast('수강 신청이 완료되었습니다.', 'success');
             setIsModalOpen(false);
             setModalEnrollCode('');
@@ -190,7 +190,7 @@ export default function StudentDashboard() {
                                                 key={c.id}
                                                 classData={c}
                                                 lectureCount={lectureCounts[c.id]}
-                                                professorName={allUsers.find(u => u.id === c.profId)?.name || '알 수 없음'}
+                                                professorName={allUsers.find(u => u.userId === c.profId)?.name || '알 수 없음'}
                                                 isEnrolled={isEnrolled}
                                                 onClick={() => isEnrolled ? router.push(`/student/class/${c.id}`) : openEnrollModal(c)}
                                                 badge={isEnrolled && <span className="badge badge-complete" style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', whiteSpace: 'nowrap', marginLeft: '0.5rem' }}>수강 중</span>}
@@ -241,7 +241,7 @@ export default function StudentDashboard() {
                                         key={c.id}
                                         classData={c}
                                         lectureCount={lectureCounts[c.id]}
-                                        professorName={allUsers.find(u => u.id === c.profId)?.name || '알 수 없음'}
+                                        professorName={allUsers.find(u => u.userId === c.profId)?.name || '알 수 없음'}
                                         onClick={() => router.push(`/student/class/${c.id}`)}
                                         footer={
                                             <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>

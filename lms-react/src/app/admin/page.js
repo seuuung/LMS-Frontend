@@ -56,7 +56,7 @@ function AdminDashboard() {
 
     // --- Edit User Modal State ---
     const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
-    const [editUserForm, setEditUserForm] = useState({ id: null, name: '', password: '', role: 'student' });
+    const [editUserForm, setEditUserForm] = useState({ userId: null, name: '', password: '', role: 'student' });
 
     // --- Edit Class Modal State ---
     const [isEditClassModalOpen, setIsEditClassModalOpen] = useState(false);
@@ -143,21 +143,21 @@ function AdminDashboard() {
 
     const handleSaveUser = async (e) => {
         e.preventDefault();
-        const { id, name, password, role } = editUserForm;
+        const { userId, name, password, role } = editUserForm;
         if (!name.trim()) return showToast('이름을 입력하세요.', 'error');
 
         try {
-            await api.users.update(id, { name: name.trim() });
+            await api.users.update(userId, { name: name.trim() });
 
             // 비밀번호 변경이 있는 경우
             if (password && password.trim() !== '') {
-                await api.users.updatePassword(id, password.trim());
+                await api.users.updatePassword(userId, password.trim());
             }
 
             // 모달 안에서 역할(Role)도 수정할 수 있다면:
             // (Mock API 구조상 role 수정 기능이 제공된다면 반영, 기본적으로 users 업데이트 활용)
             if (role) {
-                await api.users.update(id, { role });
+                await api.users.update(userId, { role });
             }
 
             showToast('유저 정보가 수정되었습니다.', 'success');
@@ -315,7 +315,7 @@ function AdminDashboard() {
                                         const createdDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '-';
                                         const updatedDate = u.updatedAt ? new Date(u.updatedAt).toLocaleDateString() : '-';
                                         return (
-                                            <tr key={u.id}>
+                                            <tr key={u.userId}>
                                                 <td>{u.username}</td>
                                                 <td>{u.name}</td>
                                                 <td>
@@ -328,12 +328,12 @@ function AdminDashboard() {
                                                 <td>{updatedDate}</td>
                                                 <td>
                                                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                                                        <button className="action-btn" onClick={() => setLogModalContext({ entityType: 'user', entityId: u.id, title: `사용자 '${u.name}' 수정 이력` })}>로그 보기</button>
+                                                        <button className="action-btn" onClick={() => setLogModalContext({ entityType: 'user', entityId: u.userId, title: `사용자 '${u.name}' 수정 이력` })}>로그 보기</button>
                                                         <button className="action-btn" onClick={() => {
-                                                            setEditUserForm({ id: u.id, name: u.name, password: '', role: u.role });
+                                                            setEditUserForm({ userId: u.userId, name: u.name, password: '', role: u.role });
                                                             setIsEditUserModalOpen(true);
                                                         }}>수정</button>
-                                                        <button className="action-btn del" onClick={() => handleDeleteUser(u.id)}>삭제</button>
+                                                        <button className="action-btn del" onClick={() => handleDeleteUser(u.userId)}>삭제</button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -381,7 +381,7 @@ function AdminDashboard() {
                                 <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>클래스가 없습니다.</p>
                             ) : (
                                 classesToDisplay.map(c => {
-                                    const prof = allUsers.find(u => u.id === c.profId);
+                                    const prof = allUsers.find(u => u.userId === c.profId);
                                     const classLogs = logs.filter(l => l.classId === c.id || (l.entityType === 'class' && l.entityId === c.id));
                                     const lastActivity = classLogs.length > 0 ? new Date(classLogs[0].timestamp).toLocaleDateString() : '-';
                                     return (
@@ -572,7 +572,7 @@ function AdminDashboard() {
                         <select className="form-control" value={newClassProfId} onChange={e => setNewClassProfId(e.target.value)} required>
                             <option value="">-- 담당 교수자 선택 --</option>
                             {profUsers.map(p => (
-                                <option key={p.id} value={p.id}>{p.name} ({p.username})</option>
+                                <option key={p.userId} value={p.userId}>{p.name} ({p.username})</option>
                             ))}
                         </select>
                     </div>

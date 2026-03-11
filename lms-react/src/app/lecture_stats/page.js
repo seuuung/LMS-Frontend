@@ -59,11 +59,11 @@ function LectureStats() {
 
             // 해당 클래스에 등록된 역할이 'student'인 사용자만 필터링
             const enrolledUsers = students.filter(u =>
-                enrollments.some(e => e.studentId === u.id) && u.role === 'student'
+                enrollments.some(e => e.studentId === u.userId) && u.role === 'student'
             );
 
             const calculatedStats = enrolledUsers.map(u => {
-                const view = allViews.find(v => v.lectureId === lectureId && v.studentId === u.id);
+                const view = allViews.find(v => v.lectureId === lectureId && v.studentId === u.userId);
                 const rate = view ? (view.progressRate || 0) : 0;
                 return {
                     user: u,

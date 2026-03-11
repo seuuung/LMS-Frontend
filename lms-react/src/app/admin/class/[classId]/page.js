@@ -198,7 +198,7 @@ export default function AdminClassDashboard() {
 
     const handleCreateQna = async (title, content, isPrivate) => {
         try {
-            await api.qnas.create(classId, user.id, title, content, isPrivate);
+            await api.qnas.create(classId, user.userId, title, content, isPrivate);
             showToast('게시글이 등록되었습니다.', 'success');
             loadData('qna');
         } catch (err) {
@@ -285,7 +285,7 @@ export default function AdminClassDashboard() {
 
                     {/* 담당 교수 변경 영역 */}
                     <div style={{ marginBottom: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        <span>담당 교수: <strong style={{ marginLeft: '0.5rem' }}>{allUsers.find(u => u.id === currentClass.profId)?.name || '미지정'}</strong></span>
+                        <span>담당 교수: <strong style={{ marginLeft: '0.5rem' }}>{allUsers.find(u => u.userId === currentClass.profId)?.name || '미지정'}</strong></span>
                         <select className="form-control" style={{ width: 'auto', marginLeft: '1rem', padding: '0.3rem 0.5rem', fontSize: '0.9rem' }} value={selectedProfId} onChange={e => setSelectedProfId(e.target.value)}>
                             {profs.map(p => (
                                 <option key={p.id} value={p.id}>{p.name}</option>
@@ -441,16 +441,16 @@ export default function AdminClassDashboard() {
                         <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>검색 결과가 없습니다.</p>
                     ) : (
                         studentSearchResults.map(student => {
-                            const isEnrolled = enrolls.some(e => e.studentId === student.id);
+                            const isEnrolled = enrolls.some(e => e.studentId === student.userId);
                             return (
-                                <div className="list-item" key={student.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div className="list-item" key={student.userId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
                                         <strong>{student.name}</strong> <small style={{ color: 'var(--text-muted)' }}>({student.username})</small>
                                     </div>
                                     <button
                                         className="btn"
                                         style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', background: isEnrolled ? '#e2e8f0' : '#3b82f6', color: isEnrolled ? '#64748b' : '#fff', cursor: isEnrolled ? 'not-allowed' : 'pointer', border: 'none' }}
-                                        onClick={() => !isEnrolled && handleAddStudent(student.id)}
+                                        onClick={() => !isEnrolled && handleAddStudent(student.userId)}
                                         disabled={isEnrolled}
                                     >
                                         {isEnrolled ? '등록됨' : '등록'}

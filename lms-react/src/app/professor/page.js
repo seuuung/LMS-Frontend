@@ -79,7 +79,7 @@ export default function ProfessorDashboard() {
                 api.classes.getAll(),
                 api.logs.getAll()
             ]);
-            const filteredClasses = allClasses.filter(c => c.profId === user.id);
+            const filteredClasses = allClasses.filter(c => c.profId === user.userId);
             setMyClasses(filteredClasses);
 
             // 실제 서버 연동 시 백엔드에서 교수자 권한에 맞는 로그만 반환됨
@@ -107,7 +107,7 @@ export default function ProfessorDashboard() {
             return;
         }
         try {
-            await api.classes.create(newTitle, newDesc, user.id, user.role);
+            await api.classes.create(newTitle, newDesc, user.userId, user.role);
             showToast('클래스가 생성되었습니다.', 'success');
             setNewTitle('');
             setNewDesc('');

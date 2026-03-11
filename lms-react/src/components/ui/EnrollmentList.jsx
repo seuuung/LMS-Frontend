@@ -23,7 +23,7 @@ export default function EnrollmentList({ enrolls, allUsers, lectures, allViews, 
                 <EmptyState message="수강생이 없습니다." />
             ) : (
                 enrolls.map(e => {
-                    const student = allUsers.find(u => u.id === e.studentId);
+                    const student = allUsers.find(u => u.userId === e.studentId);
                     const studentName = student ? student.name : e.studentId;
 
                     // 각 학생별 평균 수강률 계산: 전체 강의 중 시청 완료한 비율의 산술 평균

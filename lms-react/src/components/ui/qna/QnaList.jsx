@@ -26,7 +26,7 @@ export default function QnaList({ qnas, allUsers, currentUser, onDelete, onAddRe
     const canViewPrivate = (q) => {
         if (!q.isPrivate) return true;
         if (currentUser?.role === 'prof' || currentUser?.role === 'admin') return true;
-        if (q.authorId === currentUser?.id) return true;
+        if (q.authorId === currentUser?.userId) return true;
         return false;
     };
 
@@ -47,7 +47,7 @@ export default function QnaList({ qnas, allUsers, currentUser, onDelete, onAddRe
     // 상세 보기 모드
     const selectedQna = qnas.find(q => q.id === selectedQnaId);
     if (mode === 'detail' && selectedQna) {
-        const author = allUsers.find(u => u.id === selectedQna.authorId);
+        const author = allUsers.find(u => u.userId === selectedQna.authorId);
         const authorName = author ? author.name : selectedQna.authorId;
         return (
             <QnaDetailView
@@ -80,7 +80,7 @@ export default function QnaList({ qnas, allUsers, currentUser, onDelete, onAddRe
                 ) : (
                     sortedQnas.map(q => {
                         const accessible = canViewPrivate(q);
-                        const author = allUsers.find(u => u.id === q.authorId);
+                        const author = allUsers.find(u => u.userId === q.authorId);
                         const authorName = author ? author.name : q.authorId;
                         return (
                             <div

@@ -48,7 +48,7 @@ export default function StudentDetail({ classId, studentId, backPath, allowedRol
                 return;
             }
 
-            const targetStudent = users.find(u => u.id === studentId);
+            const targetStudent = users.find(u => u.userId === studentId);
             setStudent(targetStudent || { id: studentId, name: studentId });
             setCurrentClass(cls);
             setLectures(fetchedLectures);

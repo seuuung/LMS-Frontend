@@ -71,7 +71,7 @@ export default function StudentClassDashboard() {
             if (type === 'lec') {
                 const [fetchedLectures, fetchedViews] = await Promise.all([
                     api.lectures.getByClass(classId),
-                    api.lectureViews.getByClassAndStudent(classId, user.id)
+                    api.lectureViews.getByClassAndStudent(classId, user.userId)
                 ]);
                 setLectures(fetchedLectures);
                 setViews(fetchedViews);
@@ -93,7 +93,7 @@ export default function StudentClassDashboard() {
 
     const handleCreateQna = async (title, content, isPrivate) => {
         try {
-            await api.qnas.create(classId, user.id, title, content, isPrivate);
+            await api.qnas.create(classId, user.userId, title, content, isPrivate);
             showToast('질문이 등록되었습니다.', 'success');
             loadClassContent('qna');
         } catch (err) {

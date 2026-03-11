@@ -30,7 +30,7 @@ export default function MyInfoModal({ isOpen, onClose }) {
 
         try {
             if (infoName.trim() && infoName !== user.name) {
-                await api.users.update(user.id, { name: infoName.trim() });
+                await api.users.update(user.userId, { name: infoName.trim() });
             }
             if (infoPassword.trim()) {
                 if (!currentPassword.trim()) {
@@ -41,7 +41,7 @@ export default function MyInfoModal({ isOpen, onClose }) {
                     showToast('새 비밀번호가 일치하지 않습니다.', 'error');
                     return;
                 }
-                await api.users.updatePassword(user.id, currentPassword.trim(), infoPassword.trim());
+                await api.users.updatePassword(user.userId, currentPassword.trim(), infoPassword.trim());
             }
 
             showToast('내 정보가 성공적으로 수정되었습니다.', 'success');

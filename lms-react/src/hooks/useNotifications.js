@@ -18,8 +18,8 @@ export function useNotifications() {
         if (!user) return;
         try {
             const [list, count] = await Promise.all([
-                api.notifications.getAll(user.id),
-                api.notifications.getUnreadCount(user.id)
+                api.notifications.getAll(user.userId),
+                api.notifications.getUnreadCount(user.userId)
             ]);
             setNotifications(list);
             setUnreadCount(count);
@@ -53,7 +53,7 @@ export function useNotifications() {
     const markAllAsRead = async () => {
         if (!user) return;
         try {
-            await api.notifications.markAllAsRead(user.id);
+            await api.notifications.markAllAsRead(user.userId);
             await fetchNotifications();
         } catch (err) {
             console.error('모든 알림 읽음 처리 중 오류가 발생했습니다:', err);

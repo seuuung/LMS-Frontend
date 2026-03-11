@@ -27,9 +27,9 @@ const getDB = () => {
     const initDB = {
         users: [
             // 관리자 및 테스트용 기본 계정
-            { id: 'u_admin', username: 'admin', password: '1', name: '최고관리자', role: 'admin', createdAt: Date.now() },
-            { id: 'u_test1', username: 'test1', password: '1', name: '테스트교수', role: 'prof', createdAt: Date.now() },
-            { id: 'u_test2', username: 'test2', password: '1', name: '테스트학생', role: 'student', createdAt: Date.now() }
+            { userId: 'u_admin', username: 'admin', password: '1', name: '최고관리자', role: 'admin', createdAt: Date.now() },
+            { userId: 'u_test1', username: 'test1', password: '1', name: '테스트교수', role: 'prof', createdAt: Date.now() },
+            { userId: 'u_test2', username: 'test2', password: '1', name: '테스트학생', role: 'student', createdAt: Date.now() }
         ],
         classes: [],
         lectures: [],
@@ -119,7 +119,7 @@ export const apiMock = {
             }
             const roleNames = { student: '학생', prof: '교수자', admin: '관리자' };
             const newUser = {
-                id: generateId('u'),
+                userId: generateId('u'),
                 username: userData.username,
                 password: userData.password,
                 name: userData.name,
@@ -128,9 +128,9 @@ export const apiMock = {
                 updatedAt: Date.now()
             };
             db.users.push(newUser);
-            createLog(db, 'CREATE', 'user', newUser.id, `새로운 사용자("${newUser.username}") 등록 [이름: ${newUser.name}, 역할: ${roleNames[newUser.role] || newUser.role}]`);
+            createLog(db, 'CREATE', 'user', newUser.userId, `새로운 사용자("${newUser.username}") 등록 [이름: ${newUser.name}, 역할: ${roleNames[newUser.role] || newUser.role}]`);
             saveDB(db);
-            return { id: newUser.id, username: newUser.username, name: newUser.name, role: newUser.role };
+            return { userId: newUser.userId, username: newUser.username, name: newUser.name, role: newUser.role };
         }
     },
 
@@ -149,7 +149,7 @@ export const apiMock = {
         },
         getById: async (userId) => {
             await delay();
-            const user = getDB().users.find(u => u.id === userId);
+            const user = getDB().users.find(u => u.userId === userId);
             if (!user) return null;
             const { password, ...rest } = user;
             return rest;
@@ -157,20 +157,20 @@ export const apiMock = {
         updateRole: async (userId, newRole) => {
             await delay();
             const db = getDB();
-            const user = db.users.find(u => u.id === userId);
+            const user = db.users.find(u => u.userId === userId);
             if (!user) throw new Error('유저를 찾을 수 없습니다.');
             const roleNames = { student: '학생', prof: '교수자', admin: '관리자' };
             const oldRole = user.role;
             user.role = newRole;
             user.updatedAt = Date.now();
-            createLog(db, 'UPDATE', 'user', user.id, `사용자("${user.username}") 역할 변경: ${roleNames[oldRole] || oldRole} → ${roleNames[newRole] || newRole}`);
+            createLog(db, 'UPDATE', 'user', user.userId, `사용자("${user.username}") 역할 변경: ${roleNames[oldRole] || oldRole} → ${roleNames[newRole] || newRole}`);
             saveDB(db);
             return true;
         },
         update: async (userId, updates) => {
             await delay();
             const db = getDB();
-            const user = db.users.find(u => u.id === userId);
+            const user = db.users.find(u => u.userId === userId);
             if (!user) throw new Error('유저를 찾을 수 없습니다.');
             // 보안상 id, password, createdAt은 변경 불가
             const { id, password, createdAt, ...allowed } = updates;
@@ -186,7 +186,7 @@ export const apiMock = {
             Object.assign(user, allowed);
             user.updatedAt = Date.now();
             const detail = changes.length > 0 ? ` [변경: ${changes.join(', ')}]` : '';
-            createLog(db, 'UPDATE', 'user', user.id, `사용자("${user.username}") 정보 수정${detail}`);
+            createLog(db, 'UPDATE', 'user', user.userId, `사용자("${user.username}") 정보 수정${detail}`);
             saveDB(db);
             const { password: _, ...rest } = user;
             return rest;
@@ -194,23 +194,23 @@ export const apiMock = {
         updatePassword: async (userId, currentPassword, newPassword) => {
             await delay();
             const db = getDB();
-            const user = db.users.find(u => u.id === userId);
+            const user = db.users.find(u => u.userId === userId);
             if (!user) throw new Error('유저를 찾을 수 없습니다.');
             if (user.password !== currentPassword) throw new Error('기존 비밀번호가 일치하지 않습니다.');
             user.password = newPassword;
             user.updatedAt = Date.now();
-            createLog(db, 'UPDATE', 'user', user.id, `사용자("${user.username}") 비밀번호가 변경되었습니다.`);
+            createLog(db, 'UPDATE', 'user', user.userId, `사용자("${user.username}") 비밀번호가 변경되었습니다.`);
             saveDB(db);
             return true;
         },
         delete: async (userId) => {
             await delay();
             const db = getDB();
-            const user = db.users.find(u => u.id === userId);
+            const user = db.users.find(u => u.userId === userId);
             if (user) {
                 createLog(db, 'DELETE', 'user', userId, `사용자("${user.username}")가 삭제되었습니다.`);
             }
-            db.users = db.users.filter(u => u.id !== userId);
+            db.users = db.users.filter(u => u.userId !== userId);
             saveDB(db);
             return true;
         },
