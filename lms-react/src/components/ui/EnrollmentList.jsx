@@ -29,10 +29,10 @@ export default function EnrollmentList({ enrolls, allUsers, lectures, allViews, 
                     // 각 학생별 평균 수강률 계산: 전체 강의 중 시청 완료한 비율의 산술 평균
                     let avgProgress = 0;
                     if (lectures.length > 0) {
-                        const studentViews = allViews.filter(v => v.studentId === e.studentId);
+                        const studentViews = allViews.filter(v => String(v.studentId) === String(e.studentId));
                         const totalRate = lectures.reduce((sum, lec) => {
-                            const view = studentViews.find(v => v.lectureId === lec.id);
-                            return sum + (view ? (view.progressRate || 0) : 0);
+                            const view = studentViews.find(v => String(v.lectureId) === String(lec.id));
+                            return sum + (view ? Number(view.progressRate || 0) : 0);
                         }, 0);
                         avgProgress = Math.round(totalRate / lectures.length);
                     }

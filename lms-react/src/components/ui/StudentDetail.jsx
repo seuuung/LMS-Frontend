@@ -130,7 +130,7 @@ export default function StudentDetail({ classId, studentId, backPath, allowedRol
                             <tbody>
                                 {lectures.map((lec, idx) => {
                                     const view = views.find(v => String(v.lectureId) === String(lec.id));
-                                    const rate = view ? (view.progressRate || 0) : 0;
+                                    const rate = view ? Number(view.progressRate || 0) : 0;
 
                                     return (
                                         <tr key={lec.id}>
