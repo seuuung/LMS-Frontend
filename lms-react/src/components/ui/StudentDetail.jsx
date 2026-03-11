@@ -39,7 +39,7 @@ export default function StudentDetail({ classId, studentId, backPath, allowedRol
                 api.classes.getById(classId),
                 api.users.getAll(),
                 api.lectures.getByClass(classId),
-                api.lectureViews.getByClass(classId)
+                api.lectureViews.getByClassAndStudent(classId, studentId)
             ]);
 
             if (!cls) {
@@ -52,7 +52,7 @@ export default function StudentDetail({ classId, studentId, backPath, allowedRol
             setStudent(targetStudent || { id: studentId, name: studentId });
             setCurrentClass(cls);
             setLectures(fetchedLectures);
-            setViews(fetchedViews.filter(v => String(v.studentId) === String(studentId)));
+            setViews(fetchedViews);
         } catch (err) {
             showToast(err.message || '데이터를 불러오는 데 실패했습니다.', 'error');
         } finally {
