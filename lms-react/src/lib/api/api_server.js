@@ -122,7 +122,11 @@ export const apiReal = {
     // --- 클래스(과목) 관리 ---
     classes: {
         getAll: async () => request('GET', '/api/classes'),
-        getById: async (id) => request('GET', `/api/classes/${id}`),
+        getById: async (id) => {
+            const res = await request('GET', `/api/classes/${id}`);
+            console.log('[API Debug] fetched class data:', res);
+            return res;
+        },
         create: async (title, desc, profId, role) => request('POST', '/api/classes', { title, description: desc, profId, role }),
         update: async (id, updates) => request('PATCH', `/api/classes/${id}`, updates),
         delete: async (id) => request('DELETE', `/api/classes/${id}`)
