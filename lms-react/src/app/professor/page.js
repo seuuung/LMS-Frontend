@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
@@ -16,12 +16,10 @@ import CardDropdownMenu from '@/components/ui/CardDropdownMenu';
 import { useLectureCounts } from '@/hooks/useLectureCounts';
 
 /**
- * 교수자 전용 대시보드 컴포넌트
- * 로그인한 교수자가 개설한 클래스(My Classes) 목록을 보여주고,
- * 새로운 클래스를 생성하거나 삭제하는 기능을 제공합니다.
- * @returns {JSX.Element|null} Role이 'prof'가 아니면 null 반환
+ * 교수자 전용 대시보드 컴포넌트 (본문)
+ * useSearchParams()를 사용하여 빌드 시 Suspense Boundary가 필요하므로 별도 컴포넌트로 분리합니다.
  */
-export default function ProfessorDashboard() {
+function ProfessorDashboardContent() {
     const { requireAuth, user, updateUser } = useAuth();
     const { showToast } = useToast();
     const { confirm } = useConfirm();
@@ -273,5 +271,17 @@ export default function ProfessorDashboard() {
                 title={logModalContext?.title}
             />
         </div>
+    );
+}
+
+/**
+ * 최종 ProfessorDashboard 컴포넌트
+ * useSearchParams()를 사용하는 하위 컴포넌트를 Suspense로 감싸서 빌드 시 에러를 방지합니다.
+ */
+export default function ProfessorDashboard() {
+    return (
+        <Suspense fallback={<div className="content-loading">Loading...</div>}>
+            <ProfessorDashboardContent />
+        </Suspense>
     );
 }

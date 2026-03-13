@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { api } from '@/lib/api/api';
 import { useToast } from '@/hooks/useToast';
@@ -12,12 +12,10 @@ import ClassCard from '@/components/ui/ClassCard';
 import { useLectureCounts } from '@/hooks/useLectureCounts';
 
 /**
- * 학습자 전용 대시보드 컴포넌트
- * '클래스 탐색(전체 클래스 조회)' 및 '내 학습 공간(수강 중인 클래스 목록)' 탭을 제공합니다.
- * 수강 신청 로직과 등록된 클래스로 진입하는 라우팅을 담당합니다.
- * @returns {JSX.Element|null}
+ * 학습자 전용 대시보드 컴포넌트 (본문)
+ * useSearchParams()를 사용하여 빌드 시 Suspense Boundary가 필요하므로 별도 컴포넌트로 분리합니다.
  */
-export default function StudentDashboard() {
+function StudentDashboardContent() {
     const { requireAuth, user, updateUser } = useAuth();
     const { showToast } = useToast();
     const router = useRouter();
@@ -291,5 +289,17 @@ export default function StudentDashboard() {
                 </div>
             )}
         </div>
+    );
+}
+
+/**
+ * 최종 StudentDashboard 컴포넌트
+ * useSearchParams()를 사용하는 하위 컴포넌트를 Suspense로 감싸서 빌드 시 에러를 방지합니다.
+ */
+export default function StudentDashboard() {
+    return (
+        <Suspense fallback={<div className="content-loading">Loading...</div>}>
+            <StudentDashboardContent />
+        </Suspense>
     );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { api } from '@/lib/api/api';
@@ -16,11 +16,10 @@ import EmptyState from '@/components/ui/EmptyState';
 import QnaList from '@/components/ui/qna/QnaList';
 
 /** 
- * 학생 클래스 학습 모바/데스크탑 대시보드
- * 등록된 클래스의 강의 목록 시청, 자료 다운로드, QnA 게시판 조회를 지원합니다.
- * @returns {JSX.Element|null}
+ * 학생 클래스 학습 모바/데스크탑 대시보드 (본문)
+ * Sidebar 컴포넌트 내에서 useSearchParams()를 사용하므로 Suspense Boundary가 필요합니다.
  */
-export default function StudentClassDashboard() {
+function StudentClassDashboardContent() {
     const { requireAuth, user } = useAuth();
     const { showToast } = useToast();
     const { confirm } = useConfirm();
@@ -223,5 +222,17 @@ export default function StudentClassDashboard() {
                 </section>
             </div>
         </div>
+    );
+}
+
+/**
+ * 최종 StudentClassDashboard 컴포넌트
+ * useSearchParams()를 사용하는 하위 컴포넌트(Sidebar 등)를 Suspense로 감싸서 빌드 시 에러를 방지합니다.
+ */
+export default function StudentClassDashboard() {
+    return (
+        <Suspense fallback={<div className="content-loading">Loading...</div>}>
+            <StudentClassDashboardContent />
+        </Suspense>
     );
 }

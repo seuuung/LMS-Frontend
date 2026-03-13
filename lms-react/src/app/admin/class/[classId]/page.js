@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { api } from '@/lib/api/api';
@@ -19,12 +19,10 @@ import EnrollmentList from '@/components/ui/EnrollmentList';
 import ActivityLogModal from '@/components/ui/ActivityLogModal';
 
 /** 
- * 관리자 클래스 상세 대시보드
- * 특정 클래스(classId)에 접속하여 강의 목록, 자료, QnA, 수강생을 탭으로 관리할 수 있습니다.
- * 또한 담당 교수를 변경하는 기능이 포함되어 있습니다.
- * @returns {JSX.Element|null}
+ * 관리자 클래스 상세 대시보드 (본문)
+ * useSearchParams()를 사용하여 빌드 시 Suspense Boundary가 필요하므로 별도 컴포넌트로 분리합니다.
  */
-export default function AdminClassDashboard() {
+function AdminClassDashboardContent() {
     const { requireAuth, user } = useAuth();
     const { showToast } = useToast();
     const { confirm } = useConfirm();
@@ -482,5 +480,17 @@ export default function AdminClassDashboard() {
                 title={logModalContext?.title}
             />
         </div>
+    );
+}
+
+/**
+ * 최종 AdminClassDashboard 컴포넌트
+ * useSearchParams()를 사용하는 하위 컴포넌트를 Suspense로 감싸서 빌드 시 에러를 방지합니다.
+ */
+export default function AdminClassDashboard() {
+    return (
+        <Suspense fallback={<div className="content-loading">Loading...</div>}>
+            <AdminClassDashboardContent />
+        </Suspense>
     );
 }

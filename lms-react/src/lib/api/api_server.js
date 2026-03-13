@@ -10,7 +10,7 @@
  */
 
 // 실제 REST API 서버의 베이스 URL
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'localhost:8080';
 
 /**
  * 공통 fetch 요청 함수
