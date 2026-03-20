@@ -56,6 +56,32 @@ export default function Header() {
                 <Link href={getHomeLink()} className="navbar-brand">
                     LMS Platform
                 </Link>
+                <a
+                    href="http://platans.iptime.org/meeting"
+                    className="btn btn-outline-primary"
+                    style={{
+                        fontSize: '0.8rem',
+                        padding: '0.3rem 0.7rem',
+                        textDecoration: 'none',
+                        marginLeft: '0.5rem',
+                        borderRadius: '6px',
+                        fontWeight: '500',
+                        border: '1px solid #3b82f6',
+                        color: '#3b82f6',
+                        backgroundColor: 'transparent',
+                        transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#3b82f6';
+                        e.target.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'transparent';
+                        e.target.style.color = '#3b82f6';
+                    }}
+                >
+                    회의비 시스템 가기
+                </a>
                 {isLecturePage && (
                     <button
                         className="btn btn-back"
