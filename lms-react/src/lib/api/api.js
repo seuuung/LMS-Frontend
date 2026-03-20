@@ -15,7 +15,7 @@ import { apiReal as apiServer } from './api_server';
  * - false: 백엔드 REST API 서버(`api_server.js`) 사용
  * @type {boolean}
  */
-const USE_MOCK_API = true;
+const USE_MOCK_API = false;
 
 // 플래그에 따라 주입되는 최종 API 구현체 (Mock 또는 Real)
 const baseApi = USE_MOCK_API ? apiMock : apiServer;
